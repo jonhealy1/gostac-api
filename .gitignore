@@ -15,4 +15,4 @@
 # vendor/
 
 .env
-gorm-postgres
+go-stac-api-postgres
