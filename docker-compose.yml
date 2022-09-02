@@ -1,0 +1,30 @@
+version: '3.8'
+services: 
+  api:
+    build: "."
+    restart: always 
+    env_file:
+      - .env
+    ports:
+      - "6001:6001"
+    expose:
+      - "6001"
+    depends_on:
+      - database
+    links:
+      - database
+
+  database:
+    container_name: stac-db
+    image: ghcr.io/stac-utils/pgstac:v0.6.6
+    environment:
+      - POSTGRES_USER=username
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=postgis
+      - PGUSER=username
+      - PGPASSWORD=password
+      - PGHOST=localhost
+      - PGDATABASE=postgis
+    ports:
+      - "5432:5432"
+    command: postgres -N 500
