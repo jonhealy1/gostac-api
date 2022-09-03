@@ -6,9 +6,9 @@ services:
     env_file:
       - .env
     ports:
-      - "6000:6000"
+      - "6002:6002"
     expose:
-      - "6001"
+      - "6002"
     depends_on:
       - database
     links:
