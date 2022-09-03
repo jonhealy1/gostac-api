@@ -6,6 +6,7 @@ import (
 	"go-stac-api-postgres/models"
 	"net/http"
 
+	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -79,51 +80,32 @@ func GetCollection(c *fiber.Ctx) error {
 // @Param collection body models.Collection true "STAC Collection json"
 // @Router /collections [post]
 func CreateCollection(c *fiber.Ctx) error {
-	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	// var collection models.Collection
-	// defer cancel()
-
 	collection := new(models.Collection)
-	if err := c.BodyParser(collection); err != nil {
-		return c.Status(400).JSON(err.Error())
+	err := c.BodyParser(&collection)
+	if err != nil {
+		c.Status(http.StatusUnprocessableEntity).JSON(
+			&fiber.Map{"message": "request failed"})
+		return err
+	}
+	validator := validator.New()
+	err = validator.Struct(collection)
+
+	if err != nil {
+		c.Status(http.StatusUnprocessableEntity).JSON(
+			&fiber.Map{"message": err},
+		)
+		return err
 	}
 
-	// type newCollection struct {
-	// 	Data interface{}
-	// }
+	err = database.DB.Db.Create(&collection).Error
 
-	// insert := newCollection{Data: collection.Data[0]}
-
-	database.DB.Db.Create(&collection)
+	if err != nil {
+		c.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "could not create collection"})
+		return err
+	}
 
 	return c.Status(200).JSON(collection.Data[0])
-
-	// //validate the request body
-	// if err := c.BodyParser(&collection); err != nil {
-	// 	return c.Status(http.StatusBadRequest).JSON(responses.CollectionResponse{Status: http.StatusBadRequest, Message: "error", Data: err.Error()})
-	// }
-
-	// //use the validator library to validate required fields
-	// if validationErr := validate.Struct(&collection); validationErr != nil {
-	// 	return c.Status(http.StatusBadRequest).JSON(responses.CollectionResponse{Status: http.StatusBadRequest, Message: "error", Data: validationErr.Error()})
-	// }
-
-	// newCollection := models.Collection{
-	// 	Id:          collection.Id,
-	// 	StacVersion: collection.StacVersion,
-	// 	Description: collection.Description,
-	// 	Title:       collection.Title,
-	// 	Links:       collection.Links,
-	// 	Extent:      collection.Extent,
-	// 	Providers:   collection.Providers,
-	// }
-
-	// result, err := stacCollection.InsertOne(ctx, newCollection)
-	// if err != nil {
-	// 	return c.Status(http.StatusInternalServerError).JSON(responses.CollectionResponse{Status: http.StatusInternalServerError, Message: "error", Data: err.Error()})
-	// }
-
-	// return c.Status(http.StatusCreated).JSON(responses.CollectionResponse{Status: http.StatusCreated, Message: "success", Data: result})
 }
 
 // GetCollections godoc
