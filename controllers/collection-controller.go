@@ -105,7 +105,12 @@ func CreateCollection(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(200).JSON(collection.Data[0])
+	c.Status(http.StatusOK).JSON(&fiber.Map{
+		"message": "collection has been successfully added",
+		"data":    collection.Data[0],
+	})
+	return nil
+
 }
 
 // GetCollections godoc
@@ -119,31 +124,16 @@ func CreateCollection(c *fiber.Ctx) error {
 // @Success 200 {object} []models.Collection
 func GetCollections(c *fiber.Ctx) error {
 	collections := []models.Collection{}
-	database.DB.Db.Find(&collections)
+	err := database.DB.Db.Find(&collections).Error
+	if err != nil {
+		c.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "could not get collections"})
+		return err
+	}
 
-	return c.Status(200).JSON(collections)
-	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	// var collections []models.Collection
-	// defer cancel()
-
-	// results, err := stacCollection.Find(ctx, bson.M{})
-
-	// if err != nil {
-	// 	return c.Status(http.StatusInternalServerError).JSON(responses.CollectionResponse{Status: http.StatusInternalServerError, Message: "error", Data: err.Error()})
-	// }
-
-	// //reading from the db in an optimal way
-	// defer results.Close(ctx)
-	// for results.Next(ctx) {
-	// 	var singleCollection models.Collection
-	// 	if err = results.Decode(&singleCollection); err != nil {
-	// 		return c.Status(http.StatusInternalServerError).JSON(responses.CollectionResponse{Status: http.StatusInternalServerError, Message: "error", Data: err.Error()})
-	// 	}
-
-	// 	collections = append(collections, singleCollection)
-	// }
-
-	// return c.Status(http.StatusOK).JSON(
-	// 	responses.CollectionResponse{Status: http.StatusOK, Message: "success", Data: collections},
-	// )
+	c.Status(http.StatusOK).JSON(&fiber.Map{
+		"message": "collections received successfully",
+		"data":    collections,
+	})
+	return nil
 }
