@@ -13,5 +13,5 @@ func CollectionRoute(app *fiber.App) {
 	app.Get("/collections/:collectionId", controllers.GetCollection)
 	// app.Put("/collections/:collectionId", controllers.EditCollection)
 	// app.Delete("/collections/:collectionId", controllers.DeleteCollection)
-	// app.Get("/collections", controllers.GetCollections)
+	app.Get("/collections", controllers.GetCollections)
 }

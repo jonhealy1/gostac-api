@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"go-stac-api-postgres/database"
 	"go-stac-api-postgres/models"
-	"go-stac-api-postgres/responses"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -49,6 +48,13 @@ func Root(c *fiber.Ctx) error {
 // @Success 200 {object} models.Collection
 func GetCollection(c *fiber.Ctx) error {
 	fmt.Println("Not Implemented")
+	collection := models.Collection{}
+	match := new(models.Collection)
+	if err := c.BodyParser(match); err != nil {
+		return c.Status(400).JSON(err.Error())
+	}
+	database.DB.Db.Where("Id = ?", match.Id).Find(&collection)
+	return c.Status(200).JSON(collection)
 	// return c.Status(http.StatusOK)
 	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	// collectionId := c.Params("collectionId")
@@ -60,7 +66,7 @@ func GetCollection(c *fiber.Ctx) error {
 	// 	return c.Status(http.StatusInternalServerError).JSON(responses.CollectionResponse{Status: http.StatusInternalServerError, Message: "error", Data: &fiber.Map{"data": err.Error()}})
 	// }
 
-	return c.Status(http.StatusOK).JSON(responses.CollectionResponse{Status: http.StatusOK, Message: "success", Data: &fiber.Map{"data": "Not Implemented"}})
+	// return c.Status(http.StatusOK).JSON(responses.CollectionResponse{Status: http.StatusOK, Message: "success", Data: &fiber.Map{"data": "Not Implemented"}})
 }
 
 // CreateCollection godoc
@@ -118,4 +124,44 @@ func CreateCollection(c *fiber.Ctx) error {
 	// }
 
 	// return c.Status(http.StatusCreated).JSON(responses.CollectionResponse{Status: http.StatusCreated, Message: "success", Data: result})
+}
+
+// GetCollections godoc
+// @Summary Get all Collections
+// @Description Get all Collections
+// @Tags Collections
+// @ID get-all-collections
+// @Accept  json
+// @Produce  json
+// @Router /collections [get]
+// @Success 200 {object} []models.Collection
+func GetCollections(c *fiber.Ctx) error {
+	collections := []models.Collection{}
+	database.DB.Db.Find(&collections)
+
+	return c.Status(200).JSON(collections)
+	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// var collections []models.Collection
+	// defer cancel()
+
+	// results, err := stacCollection.Find(ctx, bson.M{})
+
+	// if err != nil {
+	// 	return c.Status(http.StatusInternalServerError).JSON(responses.CollectionResponse{Status: http.StatusInternalServerError, Message: "error", Data: err.Error()})
+	// }
+
+	// //reading from the db in an optimal way
+	// defer results.Close(ctx)
+	// for results.Next(ctx) {
+	// 	var singleCollection models.Collection
+	// 	if err = results.Decode(&singleCollection); err != nil {
+	// 		return c.Status(http.StatusInternalServerError).JSON(responses.CollectionResponse{Status: http.StatusInternalServerError, Message: "error", Data: err.Error()})
+	// 	}
+
+	// 	collections = append(collections, singleCollection)
+	// }
+
+	// return c.Status(http.StatusOK).JSON(
+	// 	responses.CollectionResponse{Status: http.StatusOK, Message: "success", Data: collections},
+	// )
 }
