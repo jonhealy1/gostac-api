@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"go-stac-api-postgres/database"
 	"go-stac-api-postgres/models"
 	"net/http"
@@ -48,26 +47,34 @@ func Root(c *fiber.Ctx) error {
 // @Router /collections/{collectionId} [get]
 // @Success 200 {object} models.Collection
 func GetCollection(c *fiber.Ctx) error {
-	fmt.Println("Not Implemented")
-	collection := models.Collection{}
-	match := new(models.Collection)
-	if err := c.BodyParser(match); err != nil {
-		return c.Status(400).JSON(err.Error())
-	}
-	database.DB.Db.Where("Id = ?", match.Id).Find(&collection)
-	return c.Status(200).JSON(collection)
-	// return c.Status(http.StatusOK)
-	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	// collectionId := c.Params("collectionId")
-	// var collection models.Collection
-	// defer cancel()
-
-	// err := stacCollection.FindOne(ctx, bson.M{"id": collectionId}).Decode(&collection)
-	// if err != nil {
-	// 	return c.Status(http.StatusInternalServerError).JSON(responses.CollectionResponse{Status: http.StatusInternalServerError, Message: "error", Data: &fiber.Map{"data": err.Error()}})
+	// collection := models.Collection{}
+	// match := new(models.Collection)
+	// if err := c.BodyParser(match); err != nil {
+	// 	return c.Status(400).JSON(err.Error())
 	// }
+	// database.DB.Db.Where("Id = ?", match.Id).Find(&collection)
+	// return c.Status(200).JSON(collection)
+	id := c.Params("collectionId")
+	collection := &models.Collection{}
+	if id == "" {
+		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "id cannot be empty",
+		})
+		return nil
+	}
 
-	// return c.Status(http.StatusOK).JSON(responses.CollectionResponse{Status: http.StatusOK, Message: "success", Data: &fiber.Map{"data": "Not Implemented"}})
+	err := database.DB.Db.Where("id = ?", id).First(collection).Error
+	if err != nil {
+		c.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "could not get collection"})
+		return err
+	}
+
+	c.Status(http.StatusOK).JSON(&fiber.Map{
+		"message": "collection retrieved successfully",
+		"data":    collection,
+	})
+	return nil
 }
 
 // CreateCollection godoc
