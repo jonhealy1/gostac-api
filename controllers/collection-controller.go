@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"go-stac-api-postgres/database"
 	"go-stac-api-postgres/models"
 	"go-stac-api-postgres/responses"
 	"net/http"
@@ -60,4 +61,61 @@ func GetCollection(c *fiber.Ctx) error {
 	// }
 
 	return c.Status(http.StatusOK).JSON(responses.CollectionResponse{Status: http.StatusOK, Message: "success", Data: &fiber.Map{"data": "Not Implemented"}})
+}
+
+// CreateCollection godoc
+// @Summary Create a STAC collection
+// @Description Create a collection with a unique ID
+// @Tags Collections
+// @ID post-collection
+// @Accept  json
+// @Produce  json
+// @Param collection body models.Collection true "STAC Collection json"
+// @Router /collections [post]
+func CreateCollection(c *fiber.Ctx) error {
+	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// var collection models.Collection
+	// defer cancel()
+
+	collection := new(models.Collection)
+	if err := c.BodyParser(collection); err != nil {
+		return c.Status(400).JSON(err.Error())
+	}
+
+	// type newCollection struct {
+	// 	Data interface{}
+	// }
+
+	// insert := newCollection{Data: collection.Data[0]}
+
+	database.DB.Db.Create(&collection)
+
+	return c.Status(200).JSON(collection.Data[0])
+
+	// //validate the request body
+	// if err := c.BodyParser(&collection); err != nil {
+	// 	return c.Status(http.StatusBadRequest).JSON(responses.CollectionResponse{Status: http.StatusBadRequest, Message: "error", Data: err.Error()})
+	// }
+
+	// //use the validator library to validate required fields
+	// if validationErr := validate.Struct(&collection); validationErr != nil {
+	// 	return c.Status(http.StatusBadRequest).JSON(responses.CollectionResponse{Status: http.StatusBadRequest, Message: "error", Data: validationErr.Error()})
+	// }
+
+	// newCollection := models.Collection{
+	// 	Id:          collection.Id,
+	// 	StacVersion: collection.StacVersion,
+	// 	Description: collection.Description,
+	// 	Title:       collection.Title,
+	// 	Links:       collection.Links,
+	// 	Extent:      collection.Extent,
+	// 	Providers:   collection.Providers,
+	// }
+
+	// result, err := stacCollection.InsertOne(ctx, newCollection)
+	// if err != nil {
+	// 	return c.Status(http.StatusInternalServerError).JSON(responses.CollectionResponse{Status: http.StatusInternalServerError, Message: "error", Data: err.Error()})
+	// }
+
+	// return c.Status(http.StatusCreated).JSON(responses.CollectionResponse{Status: http.StatusCreated, Message: "success", Data: result})
 }
