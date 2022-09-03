@@ -1,20 +1,23 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"github.com/lib/pq"
+	"gorm.io/gorm"
+)
 
 type Item struct {
 	gorm.Model
 
-	Id             string        `json:"id,omitempty"`
-	Type           string        `json:"type,omitempty"`
-	Collection     string        `json:"collection,omitempty"`
-	StacVersion    string        `json:"stac_version,omitempty"`
-	StacExtensions []string      `json:"stac_extensions,omitempty"`
-	Bbox           []float64     `json:"bbox,omitempty"`
-	Geometry       interface{}   `json:"geometry,omitempty"`
-	Properties     interface{}   `json:"properties,omitempty"`
-	Assets         interface{}   `json:"assets,omitempty"`
-	Links          []interface{} `json:"links,omitempty"`
+	Id          string `json:"id,omitempty"`
+	Type        string `json:"type,omitempty"`
+	Collection  string `json:"collection,omitempty"`
+	StacVersion string `json:"stac_version,omitempty"`
+	// StacExtensions []string      `json:"stac_extensions,omitempty"`
+	Bbox pq.Float64Array `gorm:"type:float[]"`
+	// Geometry       interface{}   `json:"geometry,omitempty"`
+	// Properties     interface{}   `json:"properties,omitempty"`
+	// Assets         interface{}   `json:"assets,omitempty"`
+	// Links          []interface{} `json:"links,omitempty"`
 }
 
 type Context struct {
