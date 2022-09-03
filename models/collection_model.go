@@ -1,6 +1,29 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
+
+	"gorm.io/gorm"
+)
+
+// JSONB Interface for JSONB Field of yourTableName Table
+type JSONB []interface{}
+
+// Value Marshal
+func (a JSONB) Value() (driver.Value, error) {
+	return json.Marshal(a)
+}
+
+// Scan Unmarshal
+func (a *JSONB) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+	return json.Unmarshal(b, &a)
+}
 
 type Link struct {
 	Rel   string `json:"rel,omitempty"`
@@ -12,23 +35,16 @@ type Link struct {
 type Collection struct {
 	gorm.Model
 
-	StacVersion string        `json:"stac_version,omitempty"`
-	Id          string        `json:"id,omitempty"`
-	Title       string        `json:"title,omitempty"`
-	Description string        `json:"description,omitempty"`
-	Keywords    []string      `json:"keywords,omitempty"`
-	License     string        `json:"license,omitempty"`
-	Providers   []interface{} `json:"providers,omitempty"`
-	Extent      interface{}   `json:"extent,omitempty"`
-	Summaries   interface{}   `json:"summary,omitempty"`
-	Links       []Link        `json:"links,omitempty"`
-	ItemType    string        `json:"itemType,omitempty"`
-	Crs         []string      `json:"crs,omitempty"`
+	// StacVersion string `gorm:"stac_version,omitempty"`
+	Id   string `gorm:"id,omitempty"`
+	Data JSONB  `gorm:"type:jsonb" json:"fieldnameofjsonb"`
+	// Title       string `gorm:"title,omitempty"`
+	// Description string `gorm:"description,omitempty"`
+	// License     string `gorm:"license,omitempty"`
+	// ItemType    string `gorm:"itemType,omitempty"`
 }
 
 type Root struct {
-	gorm.Model
-
 	StacVersion string `json:"stac_version,omitempty"`
 	Id          string `json:"id,omitempty"`
 	Title       string `json:"title,omitempty"`
