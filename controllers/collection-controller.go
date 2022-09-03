@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"fmt"
 	"go-stac-api-postgres/models"
+	"go-stac-api-postgres/responses"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -31,5 +33,31 @@ func Root(c *fiber.Ctx) error {
 		Links:       links,
 	}
 
-	return c.Status(http.StatusOK).JSON(&fiber.Map{"data": rootCatalog})
+	return c.Status(http.StatusOK).JSON(rootCatalog)
+}
+
+// GetCollection godoc
+// @Summary Get a Collection
+// @Description Get a collection by ID
+// @Tags Collections
+// @ID get-collection-by-id
+// @Accept  json
+// @Produce  json
+// @Param collectionId path string true "Collection ID"
+// @Router /collections/{collectionId} [get]
+// @Success 200 {object} models.Collection
+func GetCollection(c *fiber.Ctx) error {
+	fmt.Println("Not Implemented")
+	// return c.Status(http.StatusOK)
+	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// collectionId := c.Params("collectionId")
+	// var collection models.Collection
+	// defer cancel()
+
+	// err := stacCollection.FindOne(ctx, bson.M{"id": collectionId}).Decode(&collection)
+	// if err != nil {
+	// 	return c.Status(http.StatusInternalServerError).JSON(responses.CollectionResponse{Status: http.StatusInternalServerError, Message: "error", Data: &fiber.Map{"data": err.Error()}})
+	// }
+
+	return c.Status(http.StatusOK).JSON(responses.CollectionResponse{Status: http.StatusOK, Message: "success", Data: &fiber.Map{"data": "Not Implemented"}})
 }
