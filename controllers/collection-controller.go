@@ -47,13 +47,6 @@ func Root(c *fiber.Ctx) error {
 // @Router /collections/{collectionId} [get]
 // @Success 200 {object} models.Collection
 func GetCollection(c *fiber.Ctx) error {
-	// collection := models.Collection{}
-	// match := new(models.Collection)
-	// if err := c.BodyParser(match); err != nil {
-	// 	return c.Status(400).JSON(err.Error())
-	// }
-	// database.DB.Db.Where("Id = ?", match.Id).Find(&collection)
-	// return c.Status(200).JSON(collection)
 	id := c.Params("collectionId")
 	collection := &models.Collection{}
 	if id == "" {
