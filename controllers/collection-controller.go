@@ -218,45 +218,16 @@ func EditCollection(c *fiber.Ctx) error {
 		"message": "collection has been successfully updated",
 	})
 	return nil
-	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	// collectionId := c.Params("collectionId")
-	// var collection models.Collection
-	// defer cancel()
+}
 
-	// //validate the request body
-	// if err := c.BodyParser(&collection); err != nil {
-	// 	return c.Status(http.StatusBadRequest).JSON(responses.CollectionResponse{Status: http.StatusBadRequest, Message: "error", Data: err.Error()})
-	// }
+func Conformance(c *fiber.Ctx) error {
+	conformsTo := []string{
+		"http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core",
+		"http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/oas30",
+		"http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/geojson",
+	}
 
-	// //use the validator library to validate required fields
-	// if validationErr := validate.Struct(&collection); validationErr != nil {
-	// 	return c.Status(http.StatusBadRequest).JSON(responses.CollectionResponse{Status: http.StatusBadRequest, Message: "error", Data: validationErr.Error()})
-	// }
-
-	// update := bson.M{
-	// 	"id":           collection.Id,
-	// 	"stac_version": collection.StacVersion,
-	// 	"description":  collection.Description,
-	// 	"title":        collection.Title,
-	// 	"links":        collection.Links,
-	// 	"extent":       collection.Extent,
-	// 	"providers":    collection.Providers,
-	// }
-
-	// result, err := stacCollection.UpdateOne(ctx, bson.M{"id": collectionId}, bson.M{"$set": update})
-
-	// if err != nil {
-	// 	return c.Status(http.StatusInternalServerError).JSON(responses.CollectionResponse{Status: http.StatusInternalServerError, Message: "error", Data: err.Error()})
-	// }
-	// //get updated collection details
-	// var updatedCollection models.Collection
-	// if result.MatchedCount == 1 {
-	// 	err := stacCollection.FindOne(ctx, bson.M{"id": collectionId}).Decode(&updatedCollection)
-
-	// 	if err != nil {
-	// 		return c.Status(http.StatusInternalServerError).JSON(responses.CollectionResponse{Status: http.StatusInternalServerError, Message: "error", Data: err.Error()})
-	// 	}
-	// }
-
-	// return c.Status(http.StatusOK).JSON(responses.CollectionResponse{Status: http.StatusOK, Message: "success", Data: updatedCollection})
+	return c.Status(http.StatusOK).JSON(&fiber.Map{
+		"conformsTo": conformsTo,
+	})
 }
