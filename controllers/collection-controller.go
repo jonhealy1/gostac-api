@@ -174,3 +174,89 @@ func DeleteCollection(c *fiber.Ctx) error {
 	})
 	return nil
 }
+
+// EditCollection godoc
+// @Summary Edit a Collection
+// @Description Edit a collection by ID
+// @Tags Collections
+// @ID edit-collection
+// @Accept  json
+// @Produce  json
+// @Param collectionId path string true "Collection ID"
+// @Param collection body models.Collection true "STAC Collection json"
+// @Router /collections/{collectionId} [put]
+// @Success 200 {object} models.Collection
+func EditCollection(c *fiber.Ctx) error {
+
+	id := c.Params("collectionId")
+	if id == "" {
+		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "id cannot be empty",
+		})
+		return nil
+	}
+
+	collectionModel := &models.Collection{}
+	collection := models.Collection{}
+
+	err := c.BodyParser(&collection)
+	if err != nil {
+		c.Status(http.StatusUnprocessableEntity).JSON(
+			&fiber.Map{"message": "request failed"})
+		return err
+	}
+
+	err = database.DB.Db.Model(collectionModel).Where("id = ?", id).Updates(collection).Error
+	if err != nil {
+		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
+			"message": "could not update collection",
+		})
+		return err
+	}
+
+	c.Status(http.StatusOK).JSON(&fiber.Map{
+		"message": "collection has been successfully updated",
+	})
+	return nil
+	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// collectionId := c.Params("collectionId")
+	// var collection models.Collection
+	// defer cancel()
+
+	// //validate the request body
+	// if err := c.BodyParser(&collection); err != nil {
+	// 	return c.Status(http.StatusBadRequest).JSON(responses.CollectionResponse{Status: http.StatusBadRequest, Message: "error", Data: err.Error()})
+	// }
+
+	// //use the validator library to validate required fields
+	// if validationErr := validate.Struct(&collection); validationErr != nil {
+	// 	return c.Status(http.StatusBadRequest).JSON(responses.CollectionResponse{Status: http.StatusBadRequest, Message: "error", Data: validationErr.Error()})
+	// }
+
+	// update := bson.M{
+	// 	"id":           collection.Id,
+	// 	"stac_version": collection.StacVersion,
+	// 	"description":  collection.Description,
+	// 	"title":        collection.Title,
+	// 	"links":        collection.Links,
+	// 	"extent":       collection.Extent,
+	// 	"providers":    collection.Providers,
+	// }
+
+	// result, err := stacCollection.UpdateOne(ctx, bson.M{"id": collectionId}, bson.M{"$set": update})
+
+	// if err != nil {
+	// 	return c.Status(http.StatusInternalServerError).JSON(responses.CollectionResponse{Status: http.StatusInternalServerError, Message: "error", Data: err.Error()})
+	// }
+	// //get updated collection details
+	// var updatedCollection models.Collection
+	// if result.MatchedCount == 1 {
+	// 	err := stacCollection.FindOne(ctx, bson.M{"id": collectionId}).Decode(&updatedCollection)
+
+	// 	if err != nil {
+	// 		return c.Status(http.StatusInternalServerError).JSON(responses.CollectionResponse{Status: http.StatusInternalServerError, Message: "error", Data: err.Error()})
+	// 	}
+	// }
+
+	// return c.Status(http.StatusOK).JSON(responses.CollectionResponse{Status: http.StatusOK, Message: "success", Data: updatedCollection})
+}
