@@ -15,7 +15,7 @@ func main() {
 	app.Use(cors.New())
 
 	router.CollectionRoute(app)
-	// router.ItemRoute(app)
+	router.ItemRoute(app)
 
 	app.Listen(":6002")
 }
