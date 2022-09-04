@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"go-stac-api-postgres/database"
 	"go-stac-api-postgres/models"
 	"net/http"
@@ -134,6 +135,42 @@ func GetCollections(c *fiber.Ctx) error {
 	c.Status(http.StatusOK).JSON(&fiber.Map{
 		"message": "collections received successfully",
 		"data":    collections,
+	})
+	return nil
+}
+
+// DeleteCollection godoc
+// @Summary Delete a Collection
+// @Description Delete a collection by ID
+// @Tags Collections
+// @ID delete-collection-by-id
+// @Accept  json
+// @Produce  json
+// @Param collectionId path string true "Collection ID"
+// @Router /collections/{collectionId} [delete]
+func DeleteCollection(c *fiber.Ctx) error {
+	collection := &models.Collection{}
+
+	id := c.Params("collectionId")
+	fmt.Println(id)
+	if id == "" {
+		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "id cannot be empty",
+		})
+		return nil
+	}
+
+	err := database.DB.Db.Where("id = ?", id).Delete(&collection).Error
+
+	if err != nil {
+		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
+			"message": "could not delete collection",
+		})
+		return err
+	}
+
+	c.Status(http.StatusOK).JSON(&fiber.Map{
+		"message": "collection has been successfully deleted",
 	})
 	return nil
 }
