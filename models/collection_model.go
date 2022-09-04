@@ -35,14 +35,8 @@ type Link struct {
 type Collection struct {
 	gorm.Model
 
-	// StacVersion string `gorm:"stac_version,omitempty"`
-	// Id   string `gorm:"id,omitempty"`
 	Id   string `json:"id,omitempty"`
 	Data JSONB  `gorm:"type:jsonb" json:"data,omitempty"`
-	// Title       string `gorm:"title,omitempty"`
-	// Description string `gorm:"description,omitempty"`
-	// License     string `gorm:"license,omitempty"`
-	// ItemType    string `gorm:"itemType,omitempty"`
 }
 
 type Root struct {
