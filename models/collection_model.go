@@ -8,7 +8,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// JSONB Interface for JSONB Field of yourTableName Table
 type JSONB []interface{}
 
 // Value Marshal
