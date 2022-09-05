@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"go-stac-api-postgres/database"
 	"go-stac-api-postgres/models"
 	"net/http"
@@ -157,7 +156,6 @@ func DeleteCollection(c *fiber.Ctx) error {
 	collection := &models.Collection{}
 
 	id := c.Params("collectionId")
-	fmt.Println(id)
 	if id == "" {
 		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
 			"message": "id cannot be empty",
