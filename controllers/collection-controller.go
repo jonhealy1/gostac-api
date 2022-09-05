@@ -138,8 +138,8 @@ func GetCollections(c *fiber.Ctx) error {
 	}
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
-		"message": "collections received successfully",
-		"data":    collections,
+		"message":          "collections received successfully",
+		"stac_collections": collections,
 	})
 	return nil
 }
