@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"go-stac-api-postgres/database"
 	"go-stac-api-postgres/models"
 	"net/http"
@@ -33,24 +34,25 @@ func PostSearch(c *fiber.Ctx) error {
 		limit = search.Limit
 	}
 
+	tx1 := database.DB.Db.Limit(limit)
+	tx2 := database.DB.Db.Limit(limit)
 	if len(search.Collections) > 0 {
-		err := database.DB.Db.Limit(limit).Where("collection IN ?", search.Collections).Find(&items).Error
-
-		if err != nil {
-			c.Status(http.StatusBadRequest).JSON(
-				&fiber.Map{"message": "could not get collections"})
-			return err
-		}
+		tx1 = database.DB.Db.Limit(limit).Where("collection IN ?", search.Collections)
+		tx2 = tx1.Limit(limit)
+		fmt.Println(tx1)
 	}
 
 	if len(search.Ids) > 0 {
-		err := database.DB.Db.Limit(limit).Where("id IN ?", search.Ids).Find(&items).Error
+		tx2 = tx1.Limit(limit).Where("id IN ?", search.Ids)
+		fmt.Println(tx1)
+	}
 
-		if err != nil {
-			c.Status(http.StatusBadRequest).JSON(
-				&fiber.Map{"message": "could not get items"})
-			return err
-		}
+	err := tx2.Find(&items).Error
+
+	if err != nil {
+		c.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "could not get items"})
+		return err
 	}
 
 	context := models.Context{
