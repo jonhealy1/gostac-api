@@ -61,3 +61,41 @@ func CreateItem(c *fiber.Ctx) error {
 	})
 	return nil
 }
+
+// GetItem godoc
+// @Summary Get an item
+// @Description Get an item by its ID
+// @Tags Items
+// @ID get-item-by-id
+// @Accept  json
+// @Produce  json
+// @Param itemId path string true "Item ID"
+// @Param collectionId path string true "Collection ID"
+// @Router /collections/{collectionId}/items/{itemId} [get]
+// @Success 200 {object} models.Item
+func GetItem(c *fiber.Ctx) error {
+	// collecton_id := c.Params("collectionId")
+	item_id := c.Params("itemId")
+	item := &models.Item{}
+	if item_id == "" {
+		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "id cannot be empty",
+		})
+		return nil
+	}
+
+	err := database.DB.Db.Where("id = ?", item_id).First(item).Error
+	if err != nil {
+		c.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "could not get collection"})
+		return err
+	}
+
+	c.Status(http.StatusOK).JSON(&fiber.Map{
+		"message": "item retrieved successfully",
+		"id":      item.Id,
+		// "collection": collecton_id,
+		"stac_item": item.Data[0],
+	})
+	return nil
+}

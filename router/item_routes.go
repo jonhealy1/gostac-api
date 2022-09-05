@@ -8,7 +8,7 @@ import (
 
 func ItemRoute(app *fiber.App) {
 	app.Post("/collections/:collectionId/items", controllers.CreateItem)
-	// app.Get("/collections/:collectionId/items/:itemId", controllers.GetItem)
+	app.Get("/collections/:collectionId/items/:itemId", controllers.GetItem)
 	// app.Get("/collections/:collectionId/items", controllers.GetItemCollection)
 	// app.Put("/collections/:collectionId/items/:itemId", controllers.EditItem)
 	// app.Delete("/collections/:collectionId/items/:itemId", controllers.DeleteItem)
