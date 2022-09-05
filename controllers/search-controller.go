@@ -20,10 +20,6 @@ import (
 func PostSearch(c *fiber.Ctx) error {
 	var search models.Search
 	var items []models.Item
-	limit := 100
-	if search.Limit > 0 {
-		limit = search.Limit
-	}
 
 	if err := c.BodyParser(&search); err != nil {
 		return c.Status(http.StatusBadRequest).JSON(&fiber.Map{
@@ -32,9 +28,13 @@ func PostSearch(c *fiber.Ctx) error {
 			"Data":    err.Error(),
 		})
 	}
+	limit := 100
+	if search.Limit > 0 {
+		limit = search.Limit
+	}
 
 	if len(search.Collections) > 0 {
-		err := database.DB.Db.Where("collection IN ?", search.Collections).Find(&items).Error
+		err := database.DB.Db.Limit(limit).Where("collection IN ?", search.Collections).Find(&items).Error
 
 		if err != nil {
 			c.Status(http.StatusBadRequest).JSON(
@@ -44,7 +44,7 @@ func PostSearch(c *fiber.Ctx) error {
 	}
 
 	if len(search.Ids) > 0 {
-		err := database.DB.Db.Where("id IN ?", search.Ids).Find(&items).Error
+		err := database.DB.Db.Limit(limit).Where("id IN ?", search.Ids).Find(&items).Error
 
 		if err != nil {
 			c.Status(http.StatusBadRequest).JSON(
