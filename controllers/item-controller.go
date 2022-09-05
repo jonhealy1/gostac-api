@@ -98,6 +98,51 @@ func DeleteItem(c *fiber.Ctx) error {
 	return nil
 }
 
+// EditItem godoc
+// @Summary Edit an Item
+// @Description Edit a stac item by ID
+// @Tags Collections
+// @ID edit-item
+// @Accept  json
+// @Produce  json
+// @Param collectionId path string true "Collection ID"
+// @Param itemId path string true "Item ID"
+// @Param item body models.Item true "STAC Collection json"
+// @Router /collections/{collectionId}/items/{itemId} [put]
+// @Success 200 {object} models.Item
+func EditItem(c *fiber.Ctx) error {
+	id := c.Params("itemId")
+	if id == "" {
+		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "id cannot be empty",
+		})
+		return nil
+	}
+
+	itemModel := &models.Item{}
+	item := models.Item{}
+
+	err := c.BodyParser(&item)
+	if err != nil {
+		c.Status(http.StatusUnprocessableEntity).JSON(
+			&fiber.Map{"message": "request failed"})
+		return err
+	}
+
+	err = database.DB.Db.Model(itemModel).Where("id = ?", id).Updates(item).Error
+	if err != nil {
+		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
+			"message": "could not update item",
+		})
+		return err
+	}
+
+	c.Status(http.StatusOK).JSON(&fiber.Map{
+		"message": "collection has been successfully updated",
+	})
+	return nil
+}
+
 // GetItem godoc
 // @Summary Get an item
 // @Description Get an item by its ID
