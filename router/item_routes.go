@@ -12,5 +12,5 @@ func ItemRoute(app *fiber.App) {
 	app.Get("/collections/:collectionId/items", controllers.GetItemCollection)
 	app.Put("/collections/:collectionId/items/:itemId", controllers.EditItem)
 	app.Delete("/collections/:collectionId/items/:itemId", controllers.DeleteItem)
-	// app.Post("/search", controllers.PostSearch)
+	app.Post("/search", controllers.PostSearch)
 }
