@@ -34,7 +34,7 @@ func PostSearch(c *fiber.Ctx) error {
 	}
 
 	if len(search.Collections) > 0 {
-		err := database.DB.Db.Where("collection = ?", search.Collections).Find(&items).Error
+		err := database.DB.Db.Where("collection IN ?", search.Collections).Find(&items).Error
 
 		if err != nil {
 			c.Status(http.StatusBadRequest).JSON(
@@ -44,7 +44,7 @@ func PostSearch(c *fiber.Ctx) error {
 	}
 
 	if len(search.Ids) > 0 {
-		err := database.DB.Db.Where("id = ?", search.Ids).Find(&items).Error
+		err := database.DB.Db.Where("id IN ?", search.Ids).Find(&items).Error
 
 		if err != nil {
 			c.Status(http.StatusBadRequest).JSON(
