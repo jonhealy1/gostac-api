@@ -40,8 +40,6 @@ type Context struct {
 }
 
 type ItemCollection struct {
-	gorm.Model
-
 	Type     string  `json:"type,omitempty"`
 	Context  Context `json:"context,omitempty"`
 	Features []Item  `json:"features,omitempty"`
