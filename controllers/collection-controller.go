@@ -81,12 +81,17 @@ func GetCollection(c *fiber.Ctx) error {
 // @Param collection body models.Collection true "STAC Collection json"
 // @Router /collections [post]
 func CreateCollection(c *fiber.Ctx) error {
-	collection := new(models.Collection)
-	err := c.BodyParser(&collection)
+	stac_collection := new(models.StacCollection)
+	err := c.BodyParser(&stac_collection)
 	if err != nil {
 		c.Status(http.StatusUnprocessableEntity).JSON(
 			&fiber.Map{"message": "request failed"})
 		return err
+	}
+
+	collection := models.Collection{
+		Data: models.JSONB{(&stac_collection)},
+		Id:   stac_collection.Id,
 	}
 	validator := validator.New()
 	err = validator.Struct(collection)
@@ -107,11 +112,11 @@ func CreateCollection(c *fiber.Ctx) error {
 	}
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
-		"message": "collection has been successfully added",
-		"data":    collection.Data[0],
+		"message":         "collection has been successfully added",
+		"id":              collection.Id,
+		"stac_collection": collection.Data[0],
 	})
 	return nil
-
 }
 
 // GetCollections godoc
