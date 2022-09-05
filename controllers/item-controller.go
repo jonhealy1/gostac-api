@@ -87,7 +87,7 @@ func GetItem(c *fiber.Ctx) error {
 	err := database.DB.Db.Where("id = ?", item_id).First(item).Error
 	if err != nil {
 		c.Status(http.StatusBadRequest).JSON(
-			&fiber.Map{"message": "could not get collection"})
+			&fiber.Map{"message": "could not get item"})
 		return err
 	}
 
