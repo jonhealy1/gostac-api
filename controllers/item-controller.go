@@ -62,6 +62,42 @@ func CreateItem(c *fiber.Ctx) error {
 	return nil
 }
 
+// DeleteItem godoc
+// @Summary Delete an Item
+// @Description Delete an Item by ID is a specified collection
+// @Tags Items
+// @ID delete-item-by-id
+// @Accept  json
+// @Produce  json
+// @Param itemId path string true "Item ID"
+// @Param collectionId path string true "Collection ID"
+// @Router /collections/{collectionId}/items/{itemId} [delete]
+func DeleteItem(c *fiber.Ctx) error {
+	item := &models.Item{}
+
+	id := c.Params("itemId")
+	if id == "" {
+		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "id cannot be empty",
+		})
+		return nil
+	}
+
+	err := database.DB.Db.Where("id = ?", id).Delete(&item).Error
+
+	if err != nil {
+		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
+			"message": "could not delete item",
+		})
+		return err
+	}
+
+	c.Status(http.StatusOK).JSON(&fiber.Map{
+		"message": "item has been successfully deleted",
+	})
+	return nil
+}
+
 // GetItem godoc
 // @Summary Get an item
 // @Description Get an item by its ID
