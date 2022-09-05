@@ -43,6 +43,16 @@ func PostSearch(c *fiber.Ctx) error {
 		}
 	}
 
+	if len(search.Ids) > 0 {
+		err := database.DB.Db.Where("id = ?", search.Ids).Find(&items).Error
+
+		if err != nil {
+			c.Status(http.StatusBadRequest).JSON(
+				&fiber.Map{"message": "could not get items"})
+			return err
+		}
+	}
+
 	context := models.Context{
 		Returned: len(items),
 		Limit:    limit,
