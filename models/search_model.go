@@ -2,13 +2,9 @@ package models
 
 import (
 	"encoding/json"
-
-	"gorm.io/gorm"
 )
 
 type Search struct {
-	gorm.Model
-
 	Ids                []string                  `json:"ids,omitempty"`
 	Collections        []string                  `json:"collections,omitempty"`
 	Limit              int                       `json:"limit,omitempty"`

@@ -4,10 +4,11 @@
 ### PROGRESS:  
 - Sep.4/2022 - only collection CRUD routes are working at this time   
 - Sep.5/2022 - item CRUD routes added 
-- added item collection route (still needs better formatting) 
+- added item collection route/logic (still needs better formatting) 
+- added /search route and search collections
 
 ### TODO: 
-- Search route   
+- Search route functionality, geospatial queries
 - import ENV variables   
 - add swagger docs  
 - add tests!  
