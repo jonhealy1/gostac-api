@@ -22,6 +22,14 @@ import (
 func CreateItem(c *fiber.Ctx) error {
 	stac_item := new(models.StacItem)
 
+	collection_id := c.Params("collectionId")
+	if collection_id == "" {
+		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "collection id cannot be empty",
+		})
+		return nil
+	}
+
 	err := c.BodyParser(&stac_item)
 	if err != nil {
 		c.Status(http.StatusUnprocessableEntity).JSON(
@@ -32,7 +40,7 @@ func CreateItem(c *fiber.Ctx) error {
 	item := models.Item{
 		Data:       models.JSONB{(&stac_item)},
 		Id:         stac_item.Id,
-		Collection: stac_item.Collection,
+		Collection: collection_id,
 	}
 
 	validator := validator.New()
@@ -83,7 +91,15 @@ func DeleteItem(c *fiber.Ctx) error {
 		return nil
 	}
 
-	err := database.DB.Db.Where("id = ?", id).Delete(&item).Error
+	collection_id := c.Params("collectionId")
+	if collection_id == "" {
+		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "collection id cannot be empty",
+		})
+		return nil
+	}
+
+	err := database.DB.Db.Where("id = ? AND collection_id = ?", id, collection_id).Delete(&item).Error
 
 	if err != nil {
 		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
@@ -119,6 +135,14 @@ func EditItem(c *fiber.Ctx) error {
 		return nil
 	}
 
+	collection_id := c.Params("collectionId")
+	if collection_id == "" {
+		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "collection id cannot be empty",
+		})
+		return nil
+	}
+
 	itemModel := &models.Item{}
 	item := models.Item{}
 
@@ -129,7 +153,7 @@ func EditItem(c *fiber.Ctx) error {
 		return err
 	}
 
-	err = database.DB.Db.Model(itemModel).Where("id = ?", id).Updates(item).Error
+	err = database.DB.Db.Model(itemModel).Where("id = ? AND collection = ?", id, collection_id).Updates(item).Error
 	if err != nil {
 		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
 			"message": "could not update item",
@@ -155,9 +179,9 @@ func EditItem(c *fiber.Ctx) error {
 // @Router /collections/{collectionId}/items/{itemId} [get]
 // @Success 200 {object} models.Item
 func GetItem(c *fiber.Ctx) error {
-	// collecton_id := c.Params("collectionId")
-	item_id := c.Params("itemId")
 	item := &models.Item{}
+
+	item_id := c.Params("itemId")
 	if item_id == "" {
 		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
 			"message": "id cannot be empty",
@@ -165,7 +189,15 @@ func GetItem(c *fiber.Ctx) error {
 		return nil
 	}
 
-	err := database.DB.Db.Where("id = ?", item_id).First(item).Error
+	collection_id := c.Params("collectionId")
+	if collection_id == "" {
+		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "collection id cannot be empty",
+		})
+		return nil
+	}
+
+	err := database.DB.Db.Where("id = ? AND collection = ?", item_id, collection_id).First(item).Error
 	if err != nil {
 		c.Status(http.StatusBadRequest).JSON(
 			&fiber.Map{"message": "could not get item"})
