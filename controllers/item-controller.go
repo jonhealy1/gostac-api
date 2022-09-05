@@ -20,13 +20,21 @@ import (
 // @Param item body models.Item true "STAC Item json"
 // @Router /collections/{collectionId}/items [post]
 func CreateItem(c *fiber.Ctx) error {
-	item := new(models.Item)
-	err := c.BodyParser(&item)
+	stac_item := new(models.StacItem)
+
+	err := c.BodyParser(&stac_item)
 	if err != nil {
 		c.Status(http.StatusUnprocessableEntity).JSON(
 			&fiber.Map{"message": "request failed"})
 		return err
 	}
+
+	item := models.Item{
+		Data:       models.JSONB{(&stac_item)},
+		Id:         stac_item.Id,
+		Collection: stac_item.Collection,
+	}
+
 	validator := validator.New()
 	err = validator.Struct(item)
 
@@ -46,41 +54,10 @@ func CreateItem(c *fiber.Ctx) error {
 	}
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
-		"message": "item has been successfully added",
-		"data":    item.Data[0],
+		"message":    "item has been successfully added",
+		"id":         item.Id,
+		"collection": item.Collection,
+		"stac_item":  item.Data[0],
 	})
 	return nil
-	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	// var item models.Item
-	// defer cancel()
-
-	// //validate the request body
-	// if err := c.BodyParser(&item); err != nil {
-	// 	return c.Status(http.StatusBadRequest).JSON(responses.ItemResponse{Status: http.StatusBadRequest, Message: "error", Data: err.Error()})
-	// }
-
-	// //use the validator library to validate required fields
-	// if validationErr := validate_item.Struct(&item); validationErr != nil {
-	// 	return c.Status(http.StatusBadRequest).JSON(responses.ItemResponse{Status: http.StatusBadRequest, Message: "error", Data: validationErr.Error()})
-	// }
-
-	// newItem := models.Item{
-	// 	Id:             item.Id,
-	// 	Type:           item.Type,
-	// 	StacVersion:    item.StacVersion,
-	// 	Collection:     item.Collection,
-	// 	StacExtensions: item.StacExtensions,
-	// 	Bbox:           item.Bbox,
-	// 	Geometry:       item.Geometry,
-	// 	Properties:     item.Properties,
-	// 	Assets:         item.Assets,
-	// 	Links:          item.Links,
-	// }
-
-	// result, err := stacItem.InsertOne(ctx, newItem)
-	// if err != nil {
-	// 	return c.Status(http.StatusInternalServerError).JSON(responses.ItemResponse{Status: http.StatusInternalServerError, Message: "error", Data: err.Error()})
-	// }
-
-	// return c.Status(http.StatusCreated).JSON(responses.ItemResponse{Status: http.StatusCreated, Message: "success", Data: result})
 }
