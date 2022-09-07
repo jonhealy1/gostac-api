@@ -6,10 +6,10 @@
 - Sep.5/2022 - item CRUD routes added 
 - added item collection route/logic (still needs better formatting) 
 - added /search route and search collections
+- Sep.7/2022 - import env variables
 
 ### TODO: 
 - Search route functionality, geospatial queries
-- import ENV variables   
 - add swagger docs  
 - add tests!  
   
