@@ -14,7 +14,7 @@
 - add tests!  
   
 ### RUN LOCALLY (localhost:6002):  
-- Public postman collection available here: https://www.getpostman.com/collections/a16d074dcd961569278b 
+- Public postman collection docs are available here: https://documenter.getpostman.com/view/12888943/VVBXwQnu   
 
 ```$ make database```  
 ```$ go build```  
