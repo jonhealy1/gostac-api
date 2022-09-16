@@ -144,7 +144,7 @@ func EditItem(c *fiber.Ctx) error {
 	}
 
 	itemModel := &models.Item{}
-	item := models.Item{}
+	item := models.StacItem{}
 
 	err := c.BodyParser(&item)
 	if err != nil {
@@ -153,7 +153,13 @@ func EditItem(c *fiber.Ctx) error {
 		return err
 	}
 
-	err = database.DB.Db.Model(itemModel).Where("id = ? AND collection = ?", id, collection_id).Updates(item).Error
+	updated := models.Item{
+		Id:         id,
+		Collection: collection_id,
+		Data:       models.JSONB{(&item)},
+	}
+
+	err = database.DB.Db.Model(itemModel).Where("id = ? AND collection = ?", id, collection_id).Updates(updated).Error
 	if err != nil {
 		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
 			"message": "could not update item",
@@ -162,7 +168,7 @@ func EditItem(c *fiber.Ctx) error {
 	}
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
-		"message": "collection has been successfully updated",
+		"message": "item has been successfully updated",
 	})
 	return nil
 }
