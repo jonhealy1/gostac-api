@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/favicon"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 
 	database "go-stac-api-postgres/database"
@@ -13,6 +14,7 @@ func main() {
 	database.ConnectDb()
 	app := fiber.New()
 
+	app.Use(favicon.New())
 	app.Use(cors.New())
 	app.Use(logger.New())
 
