@@ -21,17 +21,11 @@ type StacItem struct {
 type Item struct {
 	gorm.Model
 
-	Id string `json:"id,omitempty"`
-	// Type       string `json:"type,omitempty"`
+	Id         string `json:"id,omitempty"`
 	Collection string `json:"collection,omitempty"`
-	// StacVersion string `json:"stac_version,omitempty"`
-	// StacExtensions []string      `json:"stac_extensions,omitempty"`
 	// Bbox pq.Float64Array `gorm:"type:float[]"`
 	Data JSONB `gorm:"type:jsonb" json:"data,omitempty"`
 	// Geometry       interface{}   `json:"geometry,omitempty"`
-	// Properties     interface{}   `json:"properties,omitempty"`
-	// Assets         interface{}   `json:"assets,omitempty"`
-	// Links          []interface{} `json:"links,omitempty"`
 }
 
 type Context struct {
