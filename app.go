@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -11,6 +12,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/favicon"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 
 	database "go-stac-api-postgres/database"
 	router "go-stac-api-postgres/router"
@@ -35,6 +37,7 @@ func main() {
 		},
 	}))
 	app.Use(logger.New())
+	app.Use(recover.New())
 
 	app.Use(cache.New(cache.Config{
 		Next: func(c *fiber.Ctx) bool {
@@ -46,6 +49,15 @@ func main() {
 
 	router.CollectionRoute(app)
 	router.ItemRoute(app)
+
+	app.All("*", func(c *fiber.Ctx) error {
+		errorMessage := fmt.Sprintf("Route '%s' does not exist in this API!", c.OriginalURL())
+
+		return c.Status(fiber.StatusNotFound).JSON(&fiber.Map{
+			"status":  "fail",
+			"message": errorMessage,
+		})
+	})
 
 	app.Listen(":6002")
 }
