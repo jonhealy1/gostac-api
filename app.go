@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -59,5 +60,6 @@ func main() {
 		})
 	})
 
-	app.Listen(":6002")
+	// Listen on port 6002
+	log.Fatal(app.Listen(fmt.Sprintf(":%d", 6002)))
 }
