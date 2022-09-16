@@ -10,7 +10,7 @@
 
 ### TODO: 
 - Search route functionality, geospatial queries
-- add swagger docs  
+- add swagger docs (I don't know if swagger plays nice with gorm)   
 - add tests!  
   
 ### RUN LOCALLY (localhost:6002):  
