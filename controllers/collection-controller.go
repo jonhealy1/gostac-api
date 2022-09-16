@@ -200,7 +200,7 @@ func EditCollection(c *fiber.Ctx) error {
 	}
 
 	collectionModel := &models.Collection{}
-	collection := models.Collection{}
+	collection := models.StacCollection{}
 
 	err := c.BodyParser(&collection)
 	if err != nil {
@@ -209,7 +209,12 @@ func EditCollection(c *fiber.Ctx) error {
 		return err
 	}
 
-	err = database.DB.Db.Model(collectionModel).Where("id = ?", id).Updates(collection).Error
+	updated := models.Collection{
+		Id:   id,
+		Data: models.JSONB{(&collection)},
+	}
+
+	err = database.DB.Db.Model(collectionModel).Where("id = ?", id).Updates(updated).Error
 	if err != nil {
 		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
 			"message": "could not update collection",
