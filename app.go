@@ -36,7 +36,7 @@ func Setup() *fiber.App {
 	app.Use(etag.New())
 	app.Use(favicon.New())
 	app.Use(limiter.New(limiter.Config{
-		Max: 100,
+		Max: 1000,
 		LimitReached: func(c *fiber.Ctx) error {
 			return c.Status(fiber.StatusTooManyRequests).JSON(&fiber.Map{
 				"status":  "fail",
