@@ -7,6 +7,8 @@
 - added item collection route/logic (still needs better formatting) 
 - added /search route and search collections
 - Sep.7/2022 - import env variables
+- Sep.16/2022 - added various middleware
+- Sep.17/2022 - added tests   
 
 ### TODO: 
 - Search route functionality, geospatial queries
@@ -21,5 +23,5 @@
 ```$ go run app.go```  
     
 ### TEST LOCALLY:       
-```$ go test -v ./...``
+```$ make test```
    
