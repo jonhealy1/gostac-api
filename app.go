@@ -20,6 +20,13 @@ import (
 )
 
 func main() {
+	app := Setup()
+
+	// Listen on port 6002
+	log.Fatal(app.Listen(fmt.Sprintf(":%d", 6002)))
+}
+
+func Setup() *fiber.App {
 	database.ConnectDb()
 	app := fiber.New()
 
@@ -60,6 +67,5 @@ func main() {
 		})
 	})
 
-	// Listen on port 6002
-	log.Fatal(app.Listen(fmt.Sprintf(":%d", 6002)))
+	return app
 }
