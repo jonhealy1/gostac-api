@@ -2,18 +2,22 @@ package tests
 
 import (
 	"bytes"
-	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 )
 
 func LoadCollection() {
-	postBody, _ := json.Marshal(map[string]string{
-		"id":           "sentinel-s2-l2a-cogs-testing",
-		"stac_version": "1.0.0",
-	})
-	responseBody := bytes.NewBuffer(postBody)
+	jsonFile, err := os.Open("setup_data/collection.json")
+
+	if err != nil {
+		fmt.Println(err)
+	}
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	responseBody := bytes.NewBuffer(byteValue)
 
 	resp, err := http.Post("http://localhost:6002/collections", "application/json", responseBody)
 
