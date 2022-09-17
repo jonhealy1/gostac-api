@@ -41,6 +41,7 @@ func TestCollectionsRoute(t *testing.T) {
 	// to create a so called test map, which contains all test
 	// cases, that should be run for testing this function
 	LoadCollection()
+	LoadItems()
 
 	tests := []struct {
 		description string
