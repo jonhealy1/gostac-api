@@ -19,4 +19,7 @@
 ```$ make database```  
 ```$ go build```  
 ```$ go run app.go```  
+    
+### TEST LOCALLY:       
+```$ go test -v ./...``
    
