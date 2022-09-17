@@ -7,11 +7,13 @@
 - added item collection route/logic (still needs better formatting) 
 - added /search route and search collections
 - Sep.7/2022 - import env variables
+- Sep.16/2022 - added various middleware
+- Sep.17/2022 - added tests, collection, items data loading   
 
 ### TODO: 
 - Search route functionality, geospatial queries
 - add swagger docs (I don't know if swagger plays nice with gorm)   
-- add tests!  
+- add more tests!  
   
 ### RUN LOCALLY (localhost:6002):  
 - Public postman collection docs are available here: https://documenter.getpostman.com/view/12888943/VVBXwQnu   
@@ -19,4 +21,7 @@
 ```$ make database```  
 ```$ go build```  
 ```$ go run app.go```  
+    
+### TEST LOCALLY:       
+```$ make test```
    

@@ -14,3 +14,7 @@ psql-shell:		## Enter psql shell
 	docker-compose run --rm database \
 	psql -h database -U username -d postgis
 
+.PHONY: test
+test:
+	go test go-stac-api-postgres/tests
+

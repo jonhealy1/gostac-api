@@ -20,6 +20,13 @@ import (
 )
 
 func main() {
+	app := Setup()
+
+	// Listen on port 6002
+	log.Fatal(app.Listen(fmt.Sprintf(":%d", 6002)))
+}
+
+func Setup() *fiber.App {
 	database.ConnectDb()
 	app := fiber.New()
 
@@ -29,7 +36,7 @@ func main() {
 	app.Use(etag.New())
 	app.Use(favicon.New())
 	app.Use(limiter.New(limiter.Config{
-		Max: 100,
+		Max: 1000,
 		LimitReached: func(c *fiber.Ctx) error {
 			return c.Status(fiber.StatusTooManyRequests).JSON(&fiber.Map{
 				"status":  "fail",
@@ -60,6 +67,5 @@ func main() {
 		})
 	})
 
-	// Listen on port 6002
-	log.Fatal(app.Listen(fmt.Sprintf(":%d", 6002)))
+	return app
 }

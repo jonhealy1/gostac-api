@@ -63,10 +63,7 @@ func GetCollection(c *fiber.Ctx) error {
 		return err
 	}
 
-	c.Status(http.StatusOK).JSON(&fiber.Map{
-		"message": "collection retrieved successfully",
-		"data":    collection,
-	})
+	c.Status(http.StatusOK).JSON(collection.Data[0])
 	return nil
 }
 
