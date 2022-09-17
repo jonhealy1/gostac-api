@@ -8,7 +8,7 @@
 - added /search route and search collections
 - Sep.7/2022 - import env variables
 - Sep.16/2022 - added various middleware
-- Sep.17/2022 - added tests, collection data loading   
+- Sep.17/2022 - added tests, collection, items data loading   
 
 ### TODO: 
 - Search route functionality, geospatial queries
