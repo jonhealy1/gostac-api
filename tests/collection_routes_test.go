@@ -196,7 +196,7 @@ func TestGetAllCollections(t *testing.T) {
 }
 
 func TestEditCollection(t *testing.T) {
-	var expected_collection models.Collection
+	var expected_collection models.StacCollection
 	jsonFile, err := os.Open("setup_data/updated_collection.json")
 
 	if err != nil {
@@ -257,7 +257,7 @@ func TestDeleteCollection(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	assert.Equalf(t, "200 OK", resp.Status, "create collection")
+	assert.Equalf(t, "200 OK", resp.Status, "delete collection")
 
 	// Read Response Body
 	body, err := ioutil.ReadAll(resp.Body)
@@ -269,5 +269,5 @@ func TestDeleteCollection(t *testing.T) {
 	var collection_response responses.CollectionResponse
 	json.Unmarshal(body, &collection_response)
 
-	assert.Equalf(t, "success", collection_response.Message, "create collection")
+	assert.Equalf(t, "success", collection_response.Message, "delete collection")
 }
