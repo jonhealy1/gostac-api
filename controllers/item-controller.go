@@ -62,7 +62,7 @@ func CreateItem(c *fiber.Ctx) error {
 	}
 
 	c.Status(http.StatusCreated).JSON(&fiber.Map{
-		"message":    "item has been successfully added",
+		"message":    "success",
 		"id":         item.Id,
 		"collection": item.Collection,
 		"stac_item":  item.Data[0],
