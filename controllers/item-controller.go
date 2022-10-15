@@ -99,7 +99,7 @@ func DeleteItem(c *fiber.Ctx) error {
 		return nil
 	}
 
-	err := database.DB.Db.Where("id = ? AND collection_id = ?", id, collection_id).Delete(&item).Error
+	err := database.DB.Db.Unscoped().Where("id = ? AND collection = ?", id, collection_id).Delete(&item).Error
 
 	if err != nil {
 		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
