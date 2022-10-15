@@ -138,7 +138,8 @@ func GetCollections(c *fiber.Ctx) error {
 	}
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
-		"collections": data,
+		"count":   results.RowsAffected,
+		"results": data,
 	})
 	return nil
 }
