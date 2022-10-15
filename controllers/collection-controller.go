@@ -164,7 +164,7 @@ func DeleteCollection(c *fiber.Ctx) error {
 		return nil
 	}
 
-	err := database.DB.Db.Where("id = ?", id).Delete(&collection).Error
+	err := database.DB.Db.Unscoped().Where("id = ?", id).Delete(&collection).Error
 
 	if err != nil {
 		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
@@ -224,7 +224,7 @@ func EditCollection(c *fiber.Ctx) error {
 	}
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
-		"message": "collection has been successfully updated",
+		"message": "success",
 	})
 	return nil
 }
