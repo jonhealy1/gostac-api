@@ -126,16 +126,19 @@ func CreateCollection(c *fiber.Ctx) error {
 // @Success 200 {object} []models.Collection
 func GetCollections(c *fiber.Ctx) error {
 	collections := []models.Collection{}
-	err := database.DB.Db.Find(&collections).Error
-	if err != nil {
+	results := database.DB.Db.Find(&collections)
+	if results.Error != nil {
 		c.Status(http.StatusBadRequest).JSON(
 			&fiber.Map{"message": "could not get collections"})
-		return err
+		return results.Error
+	}
+	var data []interface{}
+	for _, collection := range collections {
+		data = append(data, collection.Data[0])
 	}
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
-		"message":          "collections received successfully",
-		"stac_collections": collections,
+		"collections": data,
 	})
 	return nil
 }
