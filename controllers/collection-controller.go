@@ -36,37 +36,6 @@ func Root(c *fiber.Ctx) error {
 	return c.Status(http.StatusOK).JSON(rootCatalog)
 }
 
-// GetCollection godoc
-// @Summary Get a Collection
-// @Description Get a collection by ID
-// @Tags Collections
-// @ID get-collection-by-id
-// @Accept  json
-// @Produce  json
-// @Param collectionId path string true "Collection ID"
-// @Router /collections/{collectionId} [get]
-// @Success 200 {object} models.Collection
-func GetCollection(c *fiber.Ctx) error {
-	id := c.Params("collectionId")
-	collection := &models.Collection{}
-	if id == "" {
-		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
-			"message": "id cannot be empty",
-		})
-		return nil
-	}
-
-	err := database.DB.Db.Where("id = ?", id).First(collection).Error
-	if err != nil {
-		c.Status(http.StatusBadRequest).JSON(
-			&fiber.Map{"message": "could not get collection"})
-		return err
-	}
-
-	c.Status(http.StatusOK).JSON(collection.Data[0])
-	return nil
-}
-
 // CreateCollection godoc
 // @Summary Create a STAC collection
 // @Description Create a collection with a unique ID
@@ -107,11 +76,42 @@ func CreateCollection(c *fiber.Ctx) error {
 		return err
 	}
 
-	c.Status(http.StatusOK).JSON(&fiber.Map{
-		"message":         "collection has been successfully added",
+	c.Status(http.StatusCreated).JSON(&fiber.Map{
+		"message":         "success",
 		"id":              collection.Id,
 		"stac_collection": collection.Data[0],
 	})
+	return nil
+}
+
+// GetCollection godoc
+// @Summary Get a Collection
+// @Description Get a collection by ID
+// @Tags Collections
+// @ID get-collection-by-id
+// @Accept  json
+// @Produce  json
+// @Param collectionId path string true "Collection ID"
+// @Router /collections/{collectionId} [get]
+// @Success 200 {object} models.Collection
+func GetCollection(c *fiber.Ctx) error {
+	id := c.Params("collectionId")
+	collection := &models.Collection{}
+	if id == "" {
+		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "id cannot be empty",
+		})
+		return nil
+	}
+
+	err := database.DB.Db.Where("id = ?", id).First(collection).Error
+	if err != nil {
+		c.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "could not get collection"})
+		return err
+	}
+
+	c.Status(http.StatusOK).JSON(collection.Data[0])
 	return nil
 }
 
@@ -126,16 +126,20 @@ func CreateCollection(c *fiber.Ctx) error {
 // @Success 200 {object} []models.Collection
 func GetCollections(c *fiber.Ctx) error {
 	collections := []models.Collection{}
-	err := database.DB.Db.Find(&collections).Error
-	if err != nil {
+	results := database.DB.Db.Find(&collections)
+	if results.Error != nil {
 		c.Status(http.StatusBadRequest).JSON(
 			&fiber.Map{"message": "could not get collections"})
-		return err
+		return results.Error
+	}
+	var data []interface{}
+	for _, collection := range collections {
+		data = append(data, collection.Data[0])
 	}
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
-		"message":          "collections received successfully",
-		"stac_collections": collections,
+		"count":   results.RowsAffected,
+		"results": data,
 	})
 	return nil
 }
@@ -160,7 +164,7 @@ func DeleteCollection(c *fiber.Ctx) error {
 		return nil
 	}
 
-	err := database.DB.Db.Where("id = ?", id).Delete(&collection).Error
+	err := database.DB.Db.Unscoped().Where("id = ?", id).Delete(&collection).Error
 
 	if err != nil {
 		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
@@ -170,7 +174,7 @@ func DeleteCollection(c *fiber.Ctx) error {
 	}
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
-		"message": "collection has been successfully deleted",
+		"message": "success",
 	})
 	return nil
 }
@@ -220,7 +224,7 @@ func EditCollection(c *fiber.Ctx) error {
 	}
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
-		"message": "collection has been successfully updated",
+		"message": "success",
 	})
 	return nil
 }

@@ -61,7 +61,7 @@ func CreateItem(c *fiber.Ctx) error {
 		return err
 	}
 
-	c.Status(http.StatusOK).JSON(&fiber.Map{
+	c.Status(http.StatusCreated).JSON(&fiber.Map{
 		"message":    "item has been successfully added",
 		"id":         item.Id,
 		"collection": item.Collection,
@@ -99,7 +99,7 @@ func DeleteItem(c *fiber.Ctx) error {
 		return nil
 	}
 
-	err := database.DB.Db.Where("id = ? AND collection_id = ?", id, collection_id).Delete(&item).Error
+	err := database.DB.Db.Unscoped().Where("id = ? AND collection = ?", id, collection_id).Delete(&item).Error
 
 	if err != nil {
 		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
