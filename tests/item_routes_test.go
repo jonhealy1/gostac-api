@@ -121,59 +121,59 @@ func TestGetItem(t *testing.T) {
 	}
 }
 
-// func TestGetItemCollection(t *testing.T) {
-// 	tests := []struct {
-// 		description   string
-// 		route         string
-// 		expectedError bool
-// 		expectedCode  int
-// 	}{
-// 		{
-// 			description:   "GET item collection route",
-// 			route:         "/collections/sentinel-s2-l2a-cogs-test/items",
-// 			expectedError: false,
-// 			expectedCode:  200,
-// 		},
-// 	}
+func TestGetItemCollection(t *testing.T) {
+	tests := []struct {
+		description   string
+		route         string
+		expectedError bool
+		expectedCode  int
+	}{
+		{
+			description:   "GET item collection route",
+			route:         "/collections/sentinel-s2-l2a-cogs-test/items",
+			expectedError: false,
+			expectedCode:  200,
+		},
+	}
 
-// 	// Setup the app as it is done in the main function
-// 	app := Setup()
+	// Setup the app as it is done in the main function
+	app := Setup()
 
-// 	// Iterate through test single test cases
-// 	for _, test := range tests {
-// 		req, _ := http.NewRequest(
-// 			"GET",
-// 			test.route,
-// 			nil,
-// 		)
+	// Iterate through test single test cases
+	for _, test := range tests {
+		req, _ := http.NewRequest(
+			"GET",
+			test.route,
+			nil,
+		)
 
-// 		// Perform the request plain with the app.
-// 		// The -1 disables request latency.
-// 		res, err := app.Test(req, -1)
+		// Perform the request plain with the app.
+		// The -1 disables request latency.
+		res, err := app.Test(req, -1)
 
-// 		// // verify that no error occured, that is not expected
-// 		assert.Equalf(t, test.expectedError, err != nil, test.description)
+		// // verify that no error occured, that is not expected
+		assert.Equalf(t, test.expectedError, err != nil, test.description)
 
-// 		// As expected errors lead to broken responses, the next
-// 		// test case needs to be processed
-// 		if test.expectedError {
-// 			continue
-// 		}
+		// As expected errors lead to broken responses, the next
+		// test case needs to be processed
+		if test.expectedError {
+			continue
+		}
 
-// 		// Verify if the status code is as expected
-// 		assert.Equalf(t, test.expectedCode, res.StatusCode, test.description)
+		// Verify if the status code is as expected
+		assert.Equalf(t, test.expectedCode, res.StatusCode, test.description)
 
-// 		// Read the response body
-// 		body, err := ioutil.ReadAll(res.Body)
-// 		assert.Nilf(t, err, test.description)
+		// Read the response body
+		body, err := ioutil.ReadAll(res.Body)
+		assert.Nilf(t, err, test.description)
 
-// 		var item_collection models.ItemCollection
+		var item_collection models.ItemCollection
 
-// 		json.Unmarshal(body, &item_collection)
+		json.Unmarshal(body, &item_collection)
 
-// 		assert.GreaterOrEqual(t, item_collection.Context.Returned, 1, test.description)
-// 	}
-// }
+		assert.GreaterOrEqual(t, item_collection.Context.Returned, 1, test.description)
+	}
+}
 
 // func TestEditItem(t *testing.T) {
 // 	var expected_item models.Item
