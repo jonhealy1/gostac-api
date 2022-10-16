@@ -26,7 +26,11 @@ func TestCreateItem(t *testing.T) {
 	json.Unmarshal(byteValue, &expected_item)
 	responseBody := bytes.NewBuffer(byteValue)
 
-	resp, err := http.Post("http://localhost:6002/collections/sentinel-s2-l2a-cogs-test/items", "application/json", responseBody)
+	resp, err := http.Post(
+		"http://localhost:6002/collections/sentinel-s2-l2a-cogs-test/items",
+		"application/json",
+		responseBody,
+	)
 	if err != nil {
 		log.Fatalf("An Error Occured %v", err)
 	}
@@ -214,18 +218,18 @@ func TestGetItem(t *testing.T) {
 // 	assert.Equalf(t, "success", item_response.Message, "update item")
 // }
 
-// func TestDeleteItem(t *testing.T) {
-// 	app := Setup()
-// 	resp, err := http.NewRequest(
-// 		"DELETE",
-// 		"http://localhost:6001/collections/sentinel-s2-l2a-cogs-test/items/S2B_1CCV_20181004_0_L2A-test",
-// 		nil,
-// 	)
-// 	if err != nil {
-// 		log.Fatalf("An Error Occured %v", err)
-// 	}
+func TestDeleteItem(t *testing.T) {
+	app := Setup()
+	resp, err := http.NewRequest(
+		"DELETE",
+		"/collections/sentinel-s2-l2a-cogs-test/items/S2B_1CCV_20181004_0_L2A-test",
+		nil,
+	)
+	if err != nil {
+		log.Fatalf("An Error Occured %v", err)
+	}
 
-// 	res, err := app.Test(resp, -1)
+	res, err := app.Test(resp, -1)
 
-// 	assert.Equalf(t, 200, res.StatusCode, "delete item")
-// }
+	assert.Equalf(t, 200, res.StatusCode, "delete item")
+}
