@@ -99,17 +99,24 @@ func DeleteItem(c *fiber.Ctx) error {
 		return nil
 	}
 
-	err := database.DB.Db.Unscoped().Where("id = ? AND collection = ?", id, collection_id).Delete(&item).Error
+	results := database.DB.Db.Unscoped().Where("id = ? AND collection = ?", id, collection_id).Delete(&item)
 
-	if err != nil {
+	if results.Error != nil {
 		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
 			"message": "could not delete item",
 		})
-		return err
+		return results.Error
+	}
+
+	if results.RowsAffected == 0 {
+		c.Status(http.StatusNotFound).JSON(&fiber.Map{
+			"message": "item does not exist",
+		})
+		return nil
 	}
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
-		"message": "item has been successfully deleted",
+		"message": "success",
 	})
 	return nil
 }
@@ -211,10 +218,10 @@ func GetItem(c *fiber.Ctx) error {
 	}
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
-		"message": "item retrieved successfully",
-		"id":      item.Id,
-		// "collection": collecton_id,
-		"stac_item": item.Data[0],
+		"message":    "item retrieved successfully",
+		"id":         item.Id,
+		"collection": collection_id,
+		"stac_item":  item.Data[0],
 	})
 	return nil
 }
