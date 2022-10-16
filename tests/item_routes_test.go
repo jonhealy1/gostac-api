@@ -110,7 +110,7 @@ func TestGetItem(t *testing.T) {
 
 		json.Unmarshal(body, &stac_item)
 
-		stac_item.Collection = "sentinel-s2-l2a-cogs-test"
+		// stac_item.Collection = "sentinel-s2-l2a-cogs-test"
 
 		// Reading the response body should work everytime, such that
 		// the err variable should be nil
