@@ -175,48 +175,48 @@ func TestGetItemCollection(t *testing.T) {
 	}
 }
 
-// func TestEditItem(t *testing.T) {
-// 	var expected_item models.Item
-// 	jsonFile, err := os.Open("setup_data/S2B_1CCV_20181004_0_L2A-test-updated.json")
+func TestEditItem(t *testing.T) {
+	var expected_item models.Item
+	jsonFile, err := os.Open("setup_data/S2B_1CCV_20181004_0_L2A-test-updated.json")
 
-// 	if err != nil {
-// 		fmt.Println(err)
-// 	}
-// 	byteValue, _ := ioutil.ReadAll(jsonFile)
-// 	json.Unmarshal(byteValue, &expected_item)
-// 	responseBody := bytes.NewBuffer(byteValue)
+	if err != nil {
+		fmt.Println(err)
+	}
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	json.Unmarshal(byteValue, &expected_item)
+	responseBody := bytes.NewBuffer(byteValue)
 
-// 	client := &http.Client{}
-// 	req, err := http.NewRequest(
-// 		http.MethodPut,
-// 		"http://localhost:6001/collections/sentinel-s2-l2a-cogs-test/items/S2B_1CCV_20181004_0_L2A-test",
-// 		responseBody,
-// 	)
-// 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
-// 	if err != nil {
-// 		log.Fatalf("An Error Occured %v", err)
-// 	}
+	client := &http.Client{}
+	req, err := http.NewRequest(
+		http.MethodPut,
+		"http://localhost:6002/collections/sentinel-s2-l2a-cogs-test/items/S2B_1CCV_20181004_0_L2A-test",
+		responseBody,
+	)
+	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+	if err != nil {
+		log.Fatalf("An Error Occured %v", err)
+	}
 
-// 	resp, err := client.Do(req)
-// 	if err != nil {
-// 		log.Fatalf("An Error Occured %v", err)
-// 	}
-// 	defer resp.Body.Close()
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatalf("An Error Occured %v", err)
+	}
+	defer resp.Body.Close()
 
-// 	assert.Equalf(t, "200 OK", resp.Status, "update item")
+	assert.Equalf(t, "200 OK", resp.Status, "update item")
 
-// 	// Read Response Body
-// 	body, err := ioutil.ReadAll(resp.Body)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
+	// Read Response Body
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
-// 	var item_response responses.CollectionResponse
-// 	json.Unmarshal(body, &item_response)
+	var item_response responses.CollectionResponse
+	json.Unmarshal(body, &item_response)
 
-// 	assert.Equalf(t, "success", item_response.Message, "update item")
-// }
+	assert.Equalf(t, "success", item_response.Message, "update item")
+}
 
 func TestDeleteItem(t *testing.T) {
 	app := Setup()
