@@ -175,7 +175,7 @@ func EditItem(c *fiber.Ctx) error {
 	}
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
-		"message": "item has been successfully updated",
+		"message": "success",
 	})
 	return nil
 }
