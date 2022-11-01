@@ -1,11 +1,12 @@
 package controllers
 
 import (
+	"database/sql"
+	"encoding/json"
 	"go-stac-api-postgres/database"
 	"go-stac-api-postgres/models"
 	"net/http"
 
-	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -37,23 +38,11 @@ func CreateItem(c *fiber.Ctx) error {
 		return err
 	}
 
-	item := models.Item{
-		Data:       models.JSONB{(&stac_item)},
-		Id:         stac_item.Id,
-		Collection: collection_id,
-	}
-
-	validator := validator.New()
-	err = validator.Struct(item)
-
-	if err != nil {
-		c.Status(http.StatusUnprocessableEntity).JSON(
-			&fiber.Map{"message": err},
-		)
-		return err
-	}
-
-	err = database.DB.Db.Create(&item).Error
+	err = database.DB.Db.Exec(
+		`INSERT INTO items (id, collection, data, geometry) 
+		VALUES (@id, @collection, @data, ST_GeometryFromText('POLYGON((50.6373 3.0750,50.6374 3.0750,50.6374 3.0749,50.63 3.07491,50.6373 3.0750))'))`,
+		sql.Named("id", stac_item.Id), sql.Named("collection", stac_item.Collection), sql.Named("data", stac_item),
+	).Error
 
 	if err != nil {
 		c.Status(http.StatusBadRequest).JSON(
@@ -62,10 +51,10 @@ func CreateItem(c *fiber.Ctx) error {
 	}
 
 	c.Status(http.StatusCreated).JSON(&fiber.Map{
-		"message":    "success",
-		"id":         item.Id,
-		"collection": item.Collection,
-		"stac_item":  item.Data[0],
+		"message": "success",
+		// "id":         item.Id,
+		// "collection": item.Collection,
+		// "stac_item":  item.Data[0],
 	})
 	return nil
 }
@@ -163,7 +152,7 @@ func EditItem(c *fiber.Ctx) error {
 	updated := models.Item{
 		Id:         id,
 		Collection: collection_id,
-		Data:       models.JSONB{(&item)},
+		//Data:       models.JSONB{(&item)},
 	}
 
 	err = database.DB.Db.Model(itemModel).Where("id = ? AND collection = ?", id, collection_id).Updates(updated).Error
@@ -192,7 +181,7 @@ func EditItem(c *fiber.Ctx) error {
 // @Router /collections/{collectionId}/items/{itemId} [get]
 // @Success 200 {object} models.Item
 func GetItem(c *fiber.Ctx) error {
-	item := &models.Item{}
+	//item := &models.Item{}
 
 	item_id := c.Params("itemId")
 	if item_id == "" {
@@ -210,18 +199,21 @@ func GetItem(c *fiber.Ctx) error {
 		return nil
 	}
 
-	err := database.DB.Db.Where("id = ? AND collection = ?", item_id, collection_id).First(item).Error
-	if err != nil {
-		c.Status(http.StatusBadRequest).JSON(
-			&fiber.Map{"message": "could not get item"})
-		return err
-	}
+	var results []map[string]interface{}
+	database.DB.Db.Table("items").Find(&results)
+
+	result := &models.Item{}
+	database.DB.Db.Table("items").Where("id = ?", item_id).Find(&result)
+
+	var jsonMap map[string]interface{}
+	json.Unmarshal([]byte(result.Data), &jsonMap)
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
 		"message":    "item retrieved successfully",
-		"id":         item.Id,
-		"collection": collection_id,
-		"stac_item":  item.Data[0],
+		"id":         result.Id,
+		"collection": result.Collection,
+		"geometry":   result.Geometry,
+		"stac_item":  jsonMap,
 	})
 	return nil
 }
