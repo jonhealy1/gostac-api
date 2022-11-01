@@ -25,3 +25,6 @@
 ### TEST LOCALLY:       
 ```$ make test```
    
+### PSQL:
+```$ docker exec -it stac-db bash```
+```$ psql```
