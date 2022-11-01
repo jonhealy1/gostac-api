@@ -1,9 +1,37 @@
 package models
 
 import (
+	"database/sql/driver"
+
 	"github.com/lib/pq"
-	"gorm.io/gorm"
+	"github.com/twpayne/go-geom"
+	"github.com/twpayne/go-geom/encoding/ewkb"
 )
+
+type EWKBGeomPolygon geom.Polygon
+
+func (g *EWKBGeomPolygon) Scan(input interface{}) error {
+	gt, err := ewkb.Unmarshal(input.([]byte))
+	if err != nil {
+		return err
+	}
+	g = gt.(*EWKBGeomPolygon)
+
+	return nil
+}
+
+func (g EWKBGeomPolygon) Value() (driver.Value, error) {
+	b := geom.Polygon(g)
+	bp := &b
+	ewkbPt := ewkb.Polygon{Polygon: bp.SetSRID(4326)}
+	return ewkbPt.Value()
+}
+
+// polygon or multiline
+type GeoJSONPoly struct {
+	Type        string         `json:"type"`
+	Coordinates [][][2]float64 `json:"coordinates"`
+}
 
 type StacItem struct {
 	Id             string          `json:"id,omitempty"`
@@ -12,20 +40,17 @@ type StacItem struct {
 	StacVersion    string          `json:"stac_version,omitempty"`
 	StacExtensions []string        `json:"stac_extensions,omitempty"`
 	Bbox           pq.Float64Array `gorm:"type:float[]"`
-	Geometry       interface{}     `json:"geometry,omitempty"`
+	Geometry       GeoJSONPoly     `json:"geometry,omitempty"`
 	Properties     interface{}     `json:"properties,omitempty"`
 	Assets         interface{}     `json:"assets,omitempty"`
 	Links          []interface{}   `json:"links,omitempty"`
 }
 
 type Item struct {
-	gorm.Model
-
 	Id         string `json:"id,omitempty"`
 	Collection string `json:"collection,omitempty"`
-	// Bbox pq.Float64Array `gorm:"type:float[]"`
-	Data JSONB `gorm:"type:jsonb" json:"data,omitempty"`
-	// Geometry       interface{}   `json:"geometry,omitempty"`
+	Data       string `json:"data,omitempty"`
+	Geometry   string `json:"geometry,omitempty"`
 }
 
 type Context struct {
