@@ -199,21 +199,27 @@ func GetItem(c *fiber.Ctx) error {
 		return nil
 	}
 
-	var results []map[string]interface{}
-	database.DB.Db.Table("items").Find(&results)
+	// var results []map[string]interface{}
+	// database.DB.Db.Table("items").Find(&results)
 
 	result := &models.Item{}
 	database.DB.Db.Table("items").Where("id = ?", item_id).Find(&result)
 
-	var jsonMap map[string]interface{}
-	json.Unmarshal([]byte(result.Data), &jsonMap)
+	var geojson string
+	database.DB.Db.Raw("SELECT ST_AsGeoJSON(geometry) FROM items WHERE id = ?", item_id).Scan(&geojson)
+
+	var geomMap map[string]interface{}
+	json.Unmarshal([]byte(geojson), &geomMap)
+
+	var itemMap map[string]interface{}
+	json.Unmarshal([]byte(result.Data), &itemMap)
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
 		"message":    "item retrieved successfully",
 		"id":         result.Id,
 		"collection": result.Collection,
-		"geometry":   result.Geometry,
-		"stac_item":  jsonMap,
+		"geometry":   geomMap,
+		"stac_item":  itemMap,
 	})
 	return nil
 }
