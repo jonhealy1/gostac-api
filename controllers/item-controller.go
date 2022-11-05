@@ -3,6 +3,7 @@ package controllers
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"go-stac-api-postgres/database"
 	"go-stac-api-postgres/models"
 	"net/http"
@@ -37,11 +38,23 @@ func CreateItem(c *fiber.Ctx) error {
 			&fiber.Map{"message": "request failed"})
 		return err
 	}
-
+	coordinatesString := "[["
+	for _, s := range stac_item.Geometry.Coordinates[0] {
+		coordinatesString = coordinatesString + fmt.Sprintf("[%f, %f],", s[0], s[1])
+	}
+	coordinatesString = coordinatesString + "]]"
+	rawGeometryJSON := fmt.Sprintf("{'type':'Polygon', 'coordinates':%s}", coordinatesString)
 	err = database.DB.Db.Exec(
 		`INSERT INTO items (id, collection, data, geometry) 
-		VALUES (@id, @collection, @data, ST_GeometryFromText('POLYGON((50.6373 3.0750,50.6374 3.0750,50.6374 3.0749,50.63 3.07491,50.6373 3.0750))'))`,
-		sql.Named("id", stac_item.Id), sql.Named("collection", stac_item.Collection), sql.Named("data", stac_item),
+		VALUES (
+			@id, 
+			@collection, 
+			@data, 
+			ST_GeomFromWKB(ST_GeomFromGeoJSON(@geometry)))`,
+		sql.Named("id", stac_item.Id),
+		sql.Named("collection", stac_item.Collection),
+		sql.Named("data", stac_item),
+		sql.Named("geometry", rawGeometryJSON),
 	).Error
 
 	if err != nil {
@@ -51,9 +64,9 @@ func CreateItem(c *fiber.Ctx) error {
 	}
 
 	c.Status(http.StatusCreated).JSON(&fiber.Map{
-		"message": "success",
-		// "id":         item.Id,
-		// "collection": item.Collection,
+		"message":    "success",
+		"id":         stac_item.Id,
+		"collection": stac_item.Collection,
 		// "stac_item":  item.Data[0],
 	})
 	return nil
