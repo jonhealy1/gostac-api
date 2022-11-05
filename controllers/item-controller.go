@@ -214,13 +214,19 @@ func GetItem(c *fiber.Ctx) error {
 	var itemMap map[string]interface{}
 	json.Unmarshal([]byte(result.Data), &itemMap)
 
-	c.Status(http.StatusOK).JSON(&fiber.Map{
-		"message":    "item retrieved successfully",
-		"id":         result.Id,
-		"collection": result.Collection,
-		"geometry":   geomMap,
-		"stac_item":  itemMap,
-	})
+	if itemMap == nil {
+		c.Status(http.StatusNotFound).JSON(&fiber.Map{
+			"message": "item does not exist",
+		})
+	} else {
+		c.Status(http.StatusOK).JSON(&fiber.Map{
+			"message":    "item retrieved successfully",
+			"id":         result.Id,
+			"collection": result.Collection,
+			"geometry":   geomMap,
+			"stac_item":  itemMap,
+		})
+	}
 	return nil
 }
 
