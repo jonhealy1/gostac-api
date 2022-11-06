@@ -2,10 +2,9 @@ package database
 
 import (
 	"fmt"
+	"go-stac-api-postgres/models"
 	"log"
 	"os"
-
-	"go-stac-api-postgres/models"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -48,7 +47,13 @@ func ConnectDb() {
 	db.Logger = logger.Default.LogMode(logger.Info)
 	log.Println("running migrations")
 	db.AutoMigrate(&models.Collection{})
-	db.AutoMigrate(&models.Item{})
+
+	db.Exec(`CREATE TABLE IF NOT EXISTS items (
+		id TEXT PRIMARY KEY NOT NULL,
+		collection TEXT,
+		data JSONB,
+		geometry geometry(POLYGON, 4326) NOT NULL
+	);`)
 
 	DB = Dbinstance{
 		Db: db,

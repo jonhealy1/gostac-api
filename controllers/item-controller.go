@@ -1,11 +1,13 @@
 package controllers
 
 import (
+	"database/sql"
+	"encoding/json"
+	"fmt"
 	"go-stac-api-postgres/database"
 	"go-stac-api-postgres/models"
 	"net/http"
 
-	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -36,24 +38,24 @@ func CreateItem(c *fiber.Ctx) error {
 			&fiber.Map{"message": "request failed"})
 		return err
 	}
-
-	item := models.Item{
-		Data:       models.JSONB{(&stac_item)},
-		Id:         stac_item.Id,
-		Collection: collection_id,
+	coordinatesString := "[["
+	for _, s := range stac_item.Geometry.Coordinates[0] {
+		coordinatesString = coordinatesString + fmt.Sprintf("[%f, %f],", s[0], s[1])
 	}
-
-	validator := validator.New()
-	err = validator.Struct(item)
-
-	if err != nil {
-		c.Status(http.StatusUnprocessableEntity).JSON(
-			&fiber.Map{"message": err},
-		)
-		return err
-	}
-
-	err = database.DB.Db.Create(&item).Error
+	coordinatesString = coordinatesString + "]]"
+	rawGeometryJSON := fmt.Sprintf("{'type':'Polygon', 'coordinates':%s}", coordinatesString)
+	err = database.DB.Db.Exec(
+		`INSERT INTO items (id, collection, data, geometry) 
+		VALUES (
+			@id, 
+			@collection, 
+			@data, 
+			ST_GeomFromWKB(ST_GeomFromGeoJSON(@geometry)))`,
+		sql.Named("id", stac_item.Id),
+		sql.Named("collection", collection_id),
+		sql.Named("data", stac_item),
+		sql.Named("geometry", rawGeometryJSON),
+	).Error
 
 	if err != nil {
 		c.Status(http.StatusBadRequest).JSON(
@@ -63,9 +65,8 @@ func CreateItem(c *fiber.Ctx) error {
 
 	c.Status(http.StatusCreated).JSON(&fiber.Map{
 		"message":    "success",
-		"id":         item.Id,
-		"collection": item.Collection,
-		"stac_item":  item.Data[0],
+		"id":         stac_item.Id,
+		"collection": collection_id,
 	})
 	return nil
 }
@@ -81,8 +82,6 @@ func CreateItem(c *fiber.Ctx) error {
 // @Param collectionId path string true "Collection ID"
 // @Router /collections/{collectionId}/items/{itemId} [delete]
 func DeleteItem(c *fiber.Ctx) error {
-	item := &models.Item{}
-
 	id := c.Params("itemId")
 	if id == "" {
 		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
@@ -99,20 +98,17 @@ func DeleteItem(c *fiber.Ctx) error {
 		return nil
 	}
 
-	results := database.DB.Db.Unscoped().Where("id = ? AND collection = ?", id, collection_id).Delete(&item)
+	err := database.DB.Db.Exec(
+		`DELETE FROM items WHERE id=@id AND collection=@collection`,
+		sql.Named("id", id),
+		sql.Named("collection", collection_id),
+	).Error
 
-	if results.Error != nil {
+	if err != nil {
 		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
 			"message": "could not delete item",
 		})
-		return results.Error
-	}
-
-	if results.RowsAffected == 0 {
-		c.Status(http.StatusNotFound).JSON(&fiber.Map{
-			"message": "item does not exist",
-		})
-		return nil
+		return err
 	}
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
@@ -150,23 +146,23 @@ func EditItem(c *fiber.Ctx) error {
 		return nil
 	}
 
-	itemModel := &models.Item{}
-	item := models.StacItem{}
+	stac_item := models.StacItem{}
 
-	err := c.BodyParser(&item)
+	err := c.BodyParser(&stac_item)
 	if err != nil {
 		c.Status(http.StatusUnprocessableEntity).JSON(
 			&fiber.Map{"message": "request failed"})
 		return err
 	}
 
-	updated := models.Item{
-		Id:         id,
-		Collection: collection_id,
-		Data:       models.JSONB{(&item)},
-	}
+	err = database.DB.Db.Exec(
+		`UPDATE items SET data=@data
+		WHERE id=@id AND collection=@collection`,
+		sql.Named("data", stac_item),
+		sql.Named("id", stac_item.Id),
+		sql.Named("collection", stac_item.Collection),
+	).Error
 
-	err = database.DB.Db.Model(itemModel).Where("id = ? AND collection = ?", id, collection_id).Updates(updated).Error
 	if err != nil {
 		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
 			"message": "could not update item",
@@ -192,8 +188,6 @@ func EditItem(c *fiber.Ctx) error {
 // @Router /collections/{collectionId}/items/{itemId} [get]
 // @Success 200 {object} models.Item
 func GetItem(c *fiber.Ctx) error {
-	item := &models.Item{}
-
 	item_id := c.Params("itemId")
 	if item_id == "" {
 		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
@@ -210,19 +204,34 @@ func GetItem(c *fiber.Ctx) error {
 		return nil
 	}
 
-	err := database.DB.Db.Where("id = ? AND collection = ?", item_id, collection_id).First(item).Error
-	if err != nil {
-		c.Status(http.StatusBadRequest).JSON(
-			&fiber.Map{"message": "could not get item"})
-		return err
-	}
+	// var results []map[string]interface{}
+	// database.DB.Db.Table("items").Find(&results)
 
-	c.Status(http.StatusOK).JSON(&fiber.Map{
-		"message":    "item retrieved successfully",
-		"id":         item.Id,
-		"collection": collection_id,
-		"stac_item":  item.Data[0],
-	})
+	result := &models.Item{}
+	database.DB.Db.Table("items").Where("id = ? AND collection = ?", item_id, collection_id).Find(&result)
+
+	var geojson string
+	database.DB.Db.Raw("SELECT ST_AsGeoJSON(geometry) FROM items WHERE id = ?", item_id).Scan(&geojson)
+
+	var geomMap map[string]interface{}
+	json.Unmarshal([]byte(geojson), &geomMap)
+
+	var itemMap map[string]interface{}
+	json.Unmarshal([]byte(result.Data), &itemMap)
+
+	if itemMap == nil {
+		c.Status(http.StatusNotFound).JSON(&fiber.Map{
+			"message": "item does not exist",
+		})
+	} else {
+		c.Status(http.StatusOK).JSON(&fiber.Map{
+			"message":    "item retrieved successfully",
+			"id":         result.Id,
+			"collection": result.Collection,
+			"geometry":   geomMap,
+			"stac_item":  itemMap,
+		})
+	}
 	return nil
 }
 
@@ -264,15 +273,17 @@ func GetItemCollection(c *fiber.Ctx) error {
 
 	var stac_items []interface{}
 	for _, a_item := range items {
-		stac_items = append(stac_items, a_item.Data)
+		var itemMap map[string]interface{}
+		json.Unmarshal([]byte(a_item.Data), &itemMap)
+		stac_items = append(stac_items, itemMap)
 	}
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
-		"message":     "item collection retrieved successfully",
-		"collection_": collection_id,
-		"context":     context,
-		"type":        "FeatureCollection",
-		"features":    stac_items,
+		"message":    "item collection retrieved successfully",
+		"collection": collection_id,
+		"context":    context,
+		"type":       "FeatureCollection",
+		"features":   stac_items,
 	})
 
 	return nil

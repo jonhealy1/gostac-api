@@ -2,8 +2,13 @@ package models
 
 import (
 	"github.com/lib/pq"
-	"gorm.io/gorm"
 )
+
+// polygon or multiline
+type GeoJSONPoly struct {
+	Type        string         `json:"type"`
+	Coordinates [][][2]float64 `json:"coordinates"`
+}
 
 type StacItem struct {
 	Id             string          `json:"id,omitempty"`
@@ -12,20 +17,17 @@ type StacItem struct {
 	StacVersion    string          `json:"stac_version,omitempty"`
 	StacExtensions []string        `json:"stac_extensions,omitempty"`
 	Bbox           pq.Float64Array `gorm:"type:float[]"`
-	Geometry       interface{}     `json:"geometry,omitempty"`
+	Geometry       GeoJSONPoly     `json:"geometry,omitempty"`
 	Properties     interface{}     `json:"properties,omitempty"`
 	Assets         interface{}     `json:"assets,omitempty"`
 	Links          []interface{}   `json:"links,omitempty"`
 }
 
 type Item struct {
-	gorm.Model
-
 	Id         string `json:"id,omitempty"`
 	Collection string `json:"collection,omitempty"`
-	// Bbox pq.Float64Array `gorm:"type:float[]"`
-	Data JSONB `gorm:"type:jsonb" json:"data,omitempty"`
-	// Geometry       interface{}   `json:"geometry,omitempty"`
+	Data       string `json:"data,omitempty"`
+	Geometry   string `json:"geometry,omitempty"`
 }
 
 type Context struct {
