@@ -4,25 +4,6 @@ import (
 	"github.com/lib/pq"
 )
 
-// type EWKBGeomPolygon geom.Polygon
-
-// func (g *EWKBGeomPolygon) Scan(input interface{}) error {
-// 	gt, err := ewkb.Unmarshal(input.([]byte))
-// 	if err != nil {
-// 		return err
-// 	}
-// 	g = gt.(*EWKBGeomPolygon)
-
-// 	return nil
-// }
-
-// func (g EWKBGeomPolygon) Value() (driver.Value, error) {
-// 	b := geom.Polygon(g)
-// 	bp := &b
-// 	ewkbPt := ewkb.Polygon{Polygon: bp.SetSRID(4326)}
-// 	return ewkbPt.Value()
-// }
-
 // polygon or multiline
 type GeoJSONPoly struct {
 	Type        string         `json:"type"`
