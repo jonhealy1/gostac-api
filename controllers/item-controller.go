@@ -52,7 +52,7 @@ func CreateItem(c *fiber.Ctx) error {
 			@data, 
 			ST_GeomFromWKB(ST_GeomFromGeoJSON(@geometry)))`,
 		sql.Named("id", stac_item.Id),
-		sql.Named("collection", stac_item.Collection),
+		sql.Named("collection", collection_id),
 		sql.Named("data", stac_item),
 		sql.Named("geometry", rawGeometryJSON),
 	).Error
@@ -66,8 +66,7 @@ func CreateItem(c *fiber.Ctx) error {
 	c.Status(http.StatusCreated).JSON(&fiber.Map{
 		"message":    "success",
 		"id":         stac_item.Id,
-		"collection": stac_item.Collection,
-		// "stac_item":  item.Data[0],
+		"collection": collection_id,
 	})
 	return nil
 }
@@ -83,8 +82,6 @@ func CreateItem(c *fiber.Ctx) error {
 // @Param collectionId path string true "Collection ID"
 // @Router /collections/{collectionId}/items/{itemId} [delete]
 func DeleteItem(c *fiber.Ctx) error {
-	item := &models.Item{}
-
 	id := c.Params("itemId")
 	if id == "" {
 		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
@@ -101,20 +98,17 @@ func DeleteItem(c *fiber.Ctx) error {
 		return nil
 	}
 
-	results := database.DB.Db.Unscoped().Where("id = ? AND collection = ?", id, collection_id).Delete(&item)
+	err := database.DB.Db.Exec(
+		`DELETE FROM items WHERE id=@id AND collection=@collection`,
+		sql.Named("id", id),
+		sql.Named("collection", collection_id),
+	).Error
 
-	if results.Error != nil {
+	if err != nil {
 		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
 			"message": "could not delete item",
 		})
-		return results.Error
-	}
-
-	if results.RowsAffected == 0 {
-		c.Status(http.StatusNotFound).JSON(&fiber.Map{
-			"message": "item does not exist",
-		})
-		return nil
+		return err
 	}
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
@@ -152,23 +146,23 @@ func EditItem(c *fiber.Ctx) error {
 		return nil
 	}
 
-	itemModel := &models.Item{}
-	item := models.StacItem{}
+	stac_item := models.StacItem{}
 
-	err := c.BodyParser(&item)
+	err := c.BodyParser(&stac_item)
 	if err != nil {
 		c.Status(http.StatusUnprocessableEntity).JSON(
 			&fiber.Map{"message": "request failed"})
 		return err
 	}
 
-	updated := models.Item{
-		Id:         id,
-		Collection: collection_id,
-		//Data:       models.JSONB{(&item)},
-	}
+	err = database.DB.Db.Exec(
+		`UPDATE items SET data=@data
+		WHERE id=@id AND collection=@collection`,
+		sql.Named("data", stac_item),
+		sql.Named("id", stac_item.Id),
+		sql.Named("collection", stac_item.Collection),
+	).Error
 
-	err = database.DB.Db.Model(itemModel).Where("id = ? AND collection = ?", id, collection_id).Updates(updated).Error
 	if err != nil {
 		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
 			"message": "could not update item",
@@ -194,8 +188,6 @@ func EditItem(c *fiber.Ctx) error {
 // @Router /collections/{collectionId}/items/{itemId} [get]
 // @Success 200 {object} models.Item
 func GetItem(c *fiber.Ctx) error {
-	//item := &models.Item{}
-
 	item_id := c.Params("itemId")
 	if item_id == "" {
 		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
@@ -216,7 +208,7 @@ func GetItem(c *fiber.Ctx) error {
 	// database.DB.Db.Table("items").Find(&results)
 
 	result := &models.Item{}
-	database.DB.Db.Table("items").Where("id = ?", item_id).Find(&result)
+	database.DB.Db.Table("items").Where("id = ? AND collection = ?", item_id, collection_id).Find(&result)
 
 	var geojson string
 	database.DB.Db.Raw("SELECT ST_AsGeoJSON(geometry) FROM items WHERE id = ?", item_id).Scan(&geojson)
