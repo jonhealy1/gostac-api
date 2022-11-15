@@ -118,7 +118,9 @@ func PostSearch(c *fiber.Ctx) error {
 
 	var stac_items []interface{}
 	for _, a_item := range items {
-		stac_items = append(stac_items, a_item.Data)
+		var itemMap map[string]interface{}
+		json.Unmarshal([]byte(a_item.Data), &itemMap)
+		stac_items = append(stac_items, itemMap)
 	}
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
