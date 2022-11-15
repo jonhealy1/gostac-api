@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSearch(t *testing.T) {
+func TestSearchItems(t *testing.T) {
 	jsonBody := []byte(`{"ids": ["S2B_1CCV_20181004_0_L2A"]}`)
 	bodyReader := bytes.NewReader(jsonBody)
 
@@ -39,4 +39,5 @@ func TestSearch(t *testing.T) {
 	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search ids")
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search ids")
 	assert.Equalf(t, 100, search_response.Context.Limit, "search ids")
+	assert.Equalf(t, 1, search_response.Context.Returned, "search ids")
 }
