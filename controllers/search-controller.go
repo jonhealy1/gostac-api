@@ -38,8 +38,8 @@ func PostSearch(c *fiber.Ctx) error {
 		limit = search.Limit
 	}
 
-	geoString := ""
 	if search.Geometry.Type == "Point" || search.Geometry.Type == "Polygon" {
+		geoString := ""
 		if search.Geometry.Type == "Point" {
 			geom := models.GeoJSONPoint{}.Coordinates
 			json.Unmarshal(search.Geometry.Coordinates, &geom)
