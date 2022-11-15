@@ -89,7 +89,36 @@ func PostSearch(c *fiber.Ctx) error {
 		if err != nil {
 			log.Println(err)
 		}
-		database.DB.Db.Raw("SELECT * FROM items WHERE ST_Intersects(items.geometry, ST_GeomFromText(?, 4326))", buf.String()).Scan(&items)
+		if len(search.Collections) > 0 && len(search.Ids) > 0 {
+			database.DB.Db.Raw("SELECT * FROM items WHERE ST_Intersects(items.geometry, ST_GeomFromText(?, 4326)) AND items.collection in ? AND items.id in ?", buf.String(), search.Collections, search.Ids).Scan(&items)
+		} else if len(search.Ids) > 0 {
+			database.DB.Db.Raw("SELECT * FROM items WHERE ST_Intersects(items.geometry, ST_GeomFromText(?, 4326)) AND items.id in ?", buf.String(), search.Ids).Scan(&items)
+		} else if len(search.Collections) > 0 {
+			database.DB.Db.Raw("SELECT * FROM items WHERE ST_Intersects(items.geometry, ST_GeomFromText(?, 4326)) AND items.collection in ?", buf.String(), search.Collections).Scan(&items)
+		} else {
+			database.DB.Db.Raw("SELECT * FROM items WHERE ST_Intersects(items.geometry, ST_GeomFromText(?, 4326))", buf.String()).Scan(&items)
+		}
+	} else if len(search.Collections) > 0 || len(search.Ids) > 0 {
+		tx1 := database.DB.Db.Limit(limit)
+		tx2 := database.DB.Db.Limit(limit)
+		if len(search.Collections) > 0 {
+			tx1 = database.DB.Db.Limit(limit).Where("collection IN ?", search.Collections)
+			tx2 = tx1.Limit(limit)
+			fmt.Println(tx1)
+		}
+
+		if len(search.Ids) > 0 {
+			tx2 = tx1.Limit(limit).Where("id IN ?", search.Ids)
+			fmt.Println(tx1)
+		}
+
+		err := tx2.Find(&items).Error
+
+		if err != nil {
+			c.Status(http.StatusBadRequest).JSON(
+				&fiber.Map{"message": "could not get items"})
+			return err
+		}
 	}
 
 	context := models.Context{
