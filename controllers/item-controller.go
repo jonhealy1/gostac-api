@@ -50,7 +50,7 @@ func CreateItem(c *fiber.Ctx) error {
 			@id, 
 			@collection, 
 			@data, 
-			ST_GeomFromWKB(ST_GeomFromGeoJSON(@geometry)))`,
+			ST_GeomFromEWKB(ST_GeomFromGeoJSON(@geometry)))`,
 		sql.Named("id", stac_item.Id),
 		sql.Named("collection", collection_id),
 		sql.Named("data", stac_item),
