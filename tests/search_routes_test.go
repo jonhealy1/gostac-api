@@ -40,4 +40,5 @@ func TestSearchItems(t *testing.T) {
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search ids")
 	assert.Equalf(t, 100, search_response.Context.Limit, "search ids")
 	assert.Equalf(t, 1, search_response.Context.Returned, "search ids")
+	assert.Equalf(t, "S2B_1CCV_20181004_0_L2A", search_response.Features[0].Id, "search ids")
 }
