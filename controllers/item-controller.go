@@ -31,8 +31,19 @@ func CreateItem(c *fiber.Ctx) error {
 		})
 		return nil
 	}
+	var count int64
+	err := database.DB.Db.Table("collections").Where("id = ?", collection_id).Count(&count).Error
+	if err != nil {
+		c.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "Error checking for collection"})
+		return err
+	}
+	if count == 0 {
+		return c.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "Collection does not exist"})
+	}
 
-	err := c.BodyParser(&stac_item)
+	err = c.BodyParser(&stac_item)
 	if err != nil {
 		c.Status(http.StatusUnprocessableEntity).JSON(
 			&fiber.Map{"message": "request failed"})
