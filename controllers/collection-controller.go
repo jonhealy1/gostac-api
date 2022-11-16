@@ -28,8 +28,8 @@ func Root(c *fiber.Ctx) error {
 	rootCatalog := models.Root{
 		Id:          "test-catalog",
 		StacVersion: "1.0.0",
-		Description: "test catalog for go-stac-api, please edit",
-		Title:       "go-stac-api",
+		Description: "test catalog for goapistac, please edit",
+		Title:       "goapistac",
 		Links:       links,
 	}
 

@@ -9,6 +9,7 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lib/pq v1.3.0
+	github.com/spatial-go/geoos v1.1.3 // indirect
 	github.com/stretchr/testify v1.8.0 // indirect
 	github.com/zeimedee/go-postgres v0.0.0-20210622135935-cc5834be70dd
 	gorm.io/driver/postgres v1.1.0
