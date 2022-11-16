@@ -1,5 +1,5 @@
 {
-  "id":"sentinel-s2-l2a-cogs-test",
+  "id":"sentinel-s2-l2a-cogs-test-2",
   "stac_version":"1.0.0-beta.2",
   "description":"Sentinel-2a and Sentinel-2b imagery, processed to Level 2A (Surface Reflectance) and converted to Cloud-Optimized GeoTIFFs",
   "links":[

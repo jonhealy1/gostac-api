@@ -11,7 +11,7 @@ import (
 )
 
 func LoadCollection() {
-	jsonFile, err := os.Open("setup_data/collection.json")
+	jsonFile, err := os.Open("setup_data/test-collection.json")
 
 	if err != nil {
 		fmt.Println(err)

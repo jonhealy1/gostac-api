@@ -71,7 +71,7 @@ func TestCreateCollection(t *testing.T) {
 	assert.Equalf(t, "success", collection_response.Message, "create collection")
 }
 func TestGetCollection(t *testing.T) {
-	// LoadCollection()
+	LoadCollection()
 	LoadItems()
 
 	var expected_collection models.Collection
@@ -90,7 +90,7 @@ func TestGetCollection(t *testing.T) {
 	}{
 		{
 			description:   "GET collection route",
-			route:         "/collections/sentinel-s2-l2a-cogs-test",
+			route:         "/collections/sentinel-s2-l2a-cogs-test-2",
 			expectedError: false,
 			expectedCode:  200,
 			expectedBody:  expected_collection,
@@ -211,7 +211,7 @@ func TestEditCollection(t *testing.T) {
 	client := &http.Client{}
 	req, err := http.NewRequest(
 		http.MethodPut,
-		"http://localhost:6002/collections/sentinel-s2-l2a-cogs-test",
+		"http://localhost:6002/collections/sentinel-s2-l2a-cogs-test-2",
 		bytes.NewBuffer(jsonReq),
 	)
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
@@ -244,7 +244,7 @@ func TestDeleteCollection(t *testing.T) {
 	app := Setup()
 
 	// Create Request
-	req, err := http.NewRequest("DELETE", "/collections/sentinel-s2-l2a-cogs-test", nil)
+	req, err := http.NewRequest("DELETE", "/collections/sentinel-s2-l2a-cogs-test-2", nil)
 	if err != nil {
 		log.Fatalf("An Error Occured %v", err)
 	}
