@@ -103,3 +103,45 @@ func TestSearchNoCollections(t *testing.T) {
 	assert.Equalf(t, 100, search_response.Context.Limit, "search collections")
 	assert.Equalf(t, 0, search_response.Context.Returned, "search collections")
 }
+
+func TestSearchGeometry(t *testing.T) {
+	jsonBody := []byte(`{
+		"collections": ["sentinel-s2-l2a-cogs-test"],
+		"geometry": {
+			"type": "Polygon",
+        	"coordinates": [[
+				[170.8515625, -74.14512718337613],
+				[178.35937499999999, -74.14512718337613],
+				[178.35937499999999, -70.15296965617042],
+				[170.8515625, -70.15296965617042],
+				[170.8515625, -74.14512718337613]
+          	]]
+      	}
+	}`)
+	bodyReader := bytes.NewReader(jsonBody)
+
+	resp, err := http.Post(
+		"http://localhost:6002/search",
+		"application/json",
+		bodyReader,
+	)
+	if err != nil {
+		log.Fatalf("An Error Occured %v", err)
+	}
+	defer resp.Body.Close()
+
+	assert.Equalf(t, 200, resp.StatusCode, "create item")
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	var search_response responses.SearchResponse
+	json.Unmarshal(body, &search_response)
+
+	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
+	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
+	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
+	assert.Equalf(t, 1, search_response.Context.Returned, "search geometry")
+}
