@@ -143,5 +143,6 @@ func TestSearchGeometry(t *testing.T) {
 	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
 	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
-	assert.Equalf(t, 1, search_response.Context.Returned, "search geometry")
+	assert.Equalf(t, 50, search_response.Context.Returned, "search geometry")
+	assert.Equalf(t, "sentinel-s2-l2a-cogs-test", search_response.Features[0].Collection, "search collections")
 }
