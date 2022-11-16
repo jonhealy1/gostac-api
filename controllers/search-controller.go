@@ -38,7 +38,7 @@ func PostSearch(c *fiber.Ctx) error {
 		limit = search.Limit
 	}
 
-	if search.Geometry.Type == "Point" || search.Geometry.Type == "Polygon" {
+	if search.Geometry.Type == "Point" || search.Geometry.Type == "Polygon" || search.Geometry.Type == "LineString" {
 		geoString := ""
 		if search.Geometry.Type == "Point" {
 			geom := models.GeoJSONPoint{}.Coordinates
@@ -56,7 +56,18 @@ func PostSearch(c *fiber.Ctx) error {
 			geoString += fmt.Sprintf("[%f,", geom[0][len(geom[0])-1][0])
 			geoString += fmt.Sprintf("%f]", geom[0][len(geom[0])-1][1])
 			geoString += fmt.Sprintf("]]}")
+		} else if search.Geometry.Type == "LineString" {
+			geom := models.GeoJSONLine{}.Coordinates
+			json.Unmarshal(search.Geometry.Coordinates, &geom)
+			geoString = fmt.Sprintf(`{"type":"LineString", "Coordinates":[`)
+			geoString += fmt.Sprintf("[%f,", geom[0][0])
+			geoString += fmt.Sprintf("%f],", geom[0][1])
+			geoString += fmt.Sprintf("[%f,", geom[1][0])
+			geoString += fmt.Sprintf("%f]", geom[1][1])
+			geoString += fmt.Sprintf("]}")
 		}
+		fmt.Println(search.Geometry.Type)
+		fmt.Println(geoString)
 
 		buf := new(bytes.Buffer)
 		buf.Write([]byte(geoString))
