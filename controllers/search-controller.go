@@ -38,13 +38,26 @@ func PostSearch(c *fiber.Ctx) error {
 		limit = search.Limit
 	}
 
-	if search.Geometry.Type == "Point" || search.Geometry.Type == "Polygon" || search.Geometry.Type == "LineString" {
+	if len(search.Bbox) == 4 || search.Geometry.Type == "Point" ||
+		search.Geometry.Type == "Polygon" || search.Geometry.Type == "LineString" {
 		geoString := ""
-		if search.Geometry.Type == "Point" {
+		if len(search.Bbox) == 4 {
+			geoString += fmt.Sprintf(`{"type":"Polygon", "Coordinates":[[`)
+			geoString += fmt.Sprintf("[%f,", search.Bbox[0])
+			geoString += fmt.Sprintf("%f],", search.Bbox[1])
+			geoString += fmt.Sprintf("[%f,", search.Bbox[2])
+			geoString += fmt.Sprintf("%f],", search.Bbox[1])
+			geoString += fmt.Sprintf("[%f,", search.Bbox[2])
+			geoString += fmt.Sprintf("%f],", search.Bbox[3])
+			geoString += fmt.Sprintf("[%f,", search.Bbox[0])
+			geoString += fmt.Sprintf("%f],", search.Bbox[3])
+			geoString += fmt.Sprintf("[%f,", search.Bbox[0])
+			geoString += fmt.Sprintf("%f]", search.Bbox[1])
+			geoString += fmt.Sprintf("]]}")
+		} else if search.Geometry.Type == "Point" {
 			geom := models.GeoJSONPoint{}.Coordinates
 			json.Unmarshal(search.Geometry.Coordinates, &geom)
 			geoString = fmt.Sprintf(`{"type":"Point", "Coordinates":[%f,%f]}`, geom[0], geom[1])
-			fmt.Println(geoString)
 		} else if search.Geometry.Type == "Polygon" {
 			geom := models.GeoJSONPolygon{}.Coordinates
 			json.Unmarshal(search.Geometry.Coordinates, &geom)
@@ -66,7 +79,6 @@ func PostSearch(c *fiber.Ctx) error {
 			geoString += fmt.Sprintf("%f]", geom[1][1])
 			geoString += fmt.Sprintf("]}")
 		}
-		fmt.Println(search.Geometry.Type)
 		fmt.Println(geoString)
 
 		buf := new(bytes.Buffer)
