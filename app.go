@@ -57,6 +57,7 @@ func Setup() *fiber.App {
 
 	router.CollectionRoute(app)
 	router.ItemRoute(app)
+	router.SearchRoute(app)
 
 	app.All("*", func(c *fiber.Ctx) error {
 		errorMessage := fmt.Sprintf("Route '%s' does not exist in this API!", c.OriginalURL())

@@ -8,6 +8,7 @@ import (
 	"go-stac-api-postgres/models"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/spatial-go/geoos/geoencoding"
@@ -20,9 +21,59 @@ import (
 // @ID get-search
 // @Accept  json
 // @Produce  json
-// @Param search body models.Search true "Search body json"
+// @Param bbox1, bbox2, bbox3, bbox4 path float true "Bbox"
 // @Router /search [get]
 func GetSearch(c *fiber.Ctx) error {
+	var items []models.Item
+	bbox1, bbox2, bbox3, bbox4 := c.Query("bbox1"), c.Query("bbox2"), c.Query("bbox3"), c.Query("bbox4")
+
+	var search models.Search
+
+	b1, _ := strconv.ParseFloat(bbox1, 32)
+	b2, _ := strconv.ParseFloat(bbox2, 32)
+	b3, _ := strconv.ParseFloat(bbox3, 32)
+	b4, _ := strconv.ParseFloat(bbox4, 32)
+
+	search.Bbox = append(search.Bbox, b1, b2, b3, b4)
+
+	geoString := bbox2polygon(search.Bbox)
+	fmt.Println(geoString)
+
+	buf := new(bytes.Buffer)
+	buf.Write([]byte(geoString))
+	got, err := geoencoding.Read(buf, geoencoding.GeoJSON)
+	if err != nil {
+		log.Println(err)
+	}
+	err = geoencoding.Write(buf, got, geoencoding.WKT)
+	if err != nil {
+		log.Println(err)
+	}
+
+	database.DB.Db.Raw(`
+		SELECT * FROM items WHERE ST_Intersects(items.geometry, ST_GeomFromText(?, 4326))`,
+		buf.String()).Scan(&items)
+
+	limit := 0
+	context := models.Context{
+		Returned: len(items),
+		Limit:    limit,
+	}
+
+	var stac_items []interface{}
+	for _, a_item := range items {
+		var itemMap map[string]interface{}
+		json.Unmarshal([]byte(a_item.Data), &itemMap)
+		stac_items = append(stac_items, itemMap)
+	}
+
+	c.Status(http.StatusOK).JSON(&fiber.Map{
+		"message":  "item collection retrieved successfully",
+		"context":  context,
+		"type":     "FeatureCollection",
+		"features": stac_items,
+	})
+
 	return nil
 }
 
@@ -68,18 +119,7 @@ func PostSearch(c *fiber.Ctx) error {
 		search.Geometry.Type == "Polygon" || search.Geometry.Type == "LineString" {
 		geoString := ""
 		if len(bbox) == 4 {
-			geoString += fmt.Sprintf(`{"type":"Polygon", "Coordinates":[[`)
-			geoString += fmt.Sprintf("[%f,", bbox[0])
-			geoString += fmt.Sprintf("%f],", bbox[1])
-			geoString += fmt.Sprintf("[%f,", bbox[2])
-			geoString += fmt.Sprintf("%f],", bbox[1])
-			geoString += fmt.Sprintf("[%f,", bbox[2])
-			geoString += fmt.Sprintf("%f],", bbox[3])
-			geoString += fmt.Sprintf("[%f,", bbox[0])
-			geoString += fmt.Sprintf("%f],", bbox[3])
-			geoString += fmt.Sprintf("[%f,", bbox[0])
-			geoString += fmt.Sprintf("%f]", bbox[1])
-			geoString += fmt.Sprintf("]]}")
+			geoString = bbox2polygon(bbox)
 		} else if search.Geometry.Type == "Point" {
 			geom := models.GeoJSONPoint{}.Coordinates
 			json.Unmarshal(search.Geometry.Coordinates, &geom)
