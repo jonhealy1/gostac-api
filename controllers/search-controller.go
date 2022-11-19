@@ -38,21 +38,34 @@ func PostSearch(c *fiber.Ctx) error {
 		limit = search.Limit
 	}
 
-	if len(search.Bbox) == 4 || search.Geometry.Type == "Point" ||
+	var bbox []float64
+	if len(search.Bbox) == 6 {
+		bbox = append(bbox, search.Bbox[0])
+		bbox = append(bbox, search.Bbox[1])
+		bbox = append(bbox, search.Bbox[3])
+		bbox = append(bbox, search.Bbox[4])
+	} else if len(search.Bbox) == 4 {
+		bbox = append(bbox, search.Bbox[0])
+		bbox = append(bbox, search.Bbox[1])
+		bbox = append(bbox, search.Bbox[2])
+		bbox = append(bbox, search.Bbox[3])
+	}
+
+	if len(bbox) == 4 || search.Geometry.Type == "Point" ||
 		search.Geometry.Type == "Polygon" || search.Geometry.Type == "LineString" {
 		geoString := ""
 		if len(search.Bbox) == 4 {
 			geoString += fmt.Sprintf(`{"type":"Polygon", "Coordinates":[[`)
-			geoString += fmt.Sprintf("[%f,", search.Bbox[0])
-			geoString += fmt.Sprintf("%f],", search.Bbox[1])
-			geoString += fmt.Sprintf("[%f,", search.Bbox[2])
-			geoString += fmt.Sprintf("%f],", search.Bbox[1])
-			geoString += fmt.Sprintf("[%f,", search.Bbox[2])
-			geoString += fmt.Sprintf("%f],", search.Bbox[3])
-			geoString += fmt.Sprintf("[%f,", search.Bbox[0])
-			geoString += fmt.Sprintf("%f],", search.Bbox[3])
-			geoString += fmt.Sprintf("[%f,", search.Bbox[0])
-			geoString += fmt.Sprintf("%f]", search.Bbox[1])
+			geoString += fmt.Sprintf("[%f,", bbox[0])
+			geoString += fmt.Sprintf("%f],", bbox[1])
+			geoString += fmt.Sprintf("[%f,", bbox[2])
+			geoString += fmt.Sprintf("%f],", bbox[1])
+			geoString += fmt.Sprintf("[%f,", bbox[2])
+			geoString += fmt.Sprintf("%f],", bbox[3])
+			geoString += fmt.Sprintf("[%f,", bbox[0])
+			geoString += fmt.Sprintf("%f],", bbox[3])
+			geoString += fmt.Sprintf("[%f,", bbox[0])
+			geoString += fmt.Sprintf("%f]", bbox[1])
 			geoString += fmt.Sprintf("]]}")
 		} else if search.Geometry.Type == "Point" {
 			geom := models.GeoJSONPoint{}.Coordinates
