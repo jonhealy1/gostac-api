@@ -13,6 +13,19 @@ import (
 	"github.com/spatial-go/geoos/geoencoding"
 )
 
+// GetSearch godoc
+// @Summary GET Search request
+// @Description Search for STAC items via the Search endpoint
+// @Tags Search
+// @ID get-search
+// @Accept  json
+// @Produce  json
+// @Param search body models.Search true "Search body json"
+// @Router /search [get]
+func GetSearch(c *fiber.Ctx) error {
+	return nil
+}
+
 // PostSearch godoc
 // @Summary POST Search request
 // @Description Search for STAC items via the Search endpoint
