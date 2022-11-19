@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/spatial-go/geoos/geoencoding"
@@ -24,21 +25,20 @@ import (
 // @Param bbox1, bbox2, bbox3, bbox4 path float true "Bbox"
 // @Router /search [get]
 func GetSearch(c *fiber.Ctx) error {
-	var items []models.Item
-	bbox1, bbox2, bbox3, bbox4 := c.Query("bbox1"), c.Query("bbox2"), c.Query("bbox3"), c.Query("bbox4")
+	bboxString := c.Query("bbox")
+	bbox := strings.Split(bboxString, ",")
 
 	var search models.Search
+	var items []models.Item
 
-	b1, _ := strconv.ParseFloat(bbox1, 32)
-	b2, _ := strconv.ParseFloat(bbox2, 32)
-	b3, _ := strconv.ParseFloat(bbox3, 32)
-	b4, _ := strconv.ParseFloat(bbox4, 32)
+	b1, _ := strconv.ParseFloat(bbox[0], 32)
+	b2, _ := strconv.ParseFloat(bbox[1], 32)
+	b3, _ := strconv.ParseFloat(bbox[2], 32)
+	b4, _ := strconv.ParseFloat(bbox[3], 32)
 
 	search.Bbox = append(search.Bbox, b1, b2, b3, b4)
 
 	geoString := bbox2polygon(search.Bbox)
-	fmt.Println(geoString)
-
 	buf := new(bytes.Buffer)
 	buf.Write([]byte(geoString))
 	got, err := geoencoding.Read(buf, geoencoding.GeoJSON)
