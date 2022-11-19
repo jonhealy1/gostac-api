@@ -54,7 +54,7 @@ func PostSearch(c *fiber.Ctx) error {
 	if len(bbox) == 4 || search.Geometry.Type == "Point" ||
 		search.Geometry.Type == "Polygon" || search.Geometry.Type == "LineString" {
 		geoString := ""
-		if len(search.Bbox) == 4 {
+		if len(bbox) == 4 {
 			geoString += fmt.Sprintf(`{"type":"Polygon", "Coordinates":[[`)
 			geoString += fmt.Sprintf("[%f,", bbox[0])
 			geoString += fmt.Sprintf("%f],", bbox[1])
