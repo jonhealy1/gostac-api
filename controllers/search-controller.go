@@ -15,7 +15,7 @@ import (
 	"github.com/spatial-go/geoos/geoencoding"
 )
 
-func SQLString(search_map models.SearchMap) string {
+func sQLString(search_map models.SearchMap) string {
 	if search_map.Ids == 0 && search_map.Collections == 1 && search_map.Geometry == 0 {
 		return `SELECT * FROM items WHERE items.collection in ?`
 	} else if search_map.Ids == 0 && search_map.Collections == 0 && search_map.Geometry == 1 {
@@ -33,7 +33,7 @@ func SQLString(search_map models.SearchMap) string {
 	return ""
 }
 
-func Geoencoding(geoString string) string {
+func toWKT(geoString string) string {
 	buf := new(bytes.Buffer)
 	buf.Write([]byte(geoString))
 	got, err := geoencoding.Read(buf, geoencoding.GeoJSON)
@@ -45,6 +45,22 @@ func Geoencoding(geoString string) string {
 		log.Println(err)
 	}
 	return buf.String()
+}
+
+func fix3dBbox(search models.Search) []float64 {
+	var bbox []float64
+	if len(search.Bbox) == 6 {
+		bbox = append(bbox, search.Bbox[0])
+		bbox = append(bbox, search.Bbox[1])
+		bbox = append(bbox, search.Bbox[3])
+		bbox = append(bbox, search.Bbox[4])
+	} else if len(search.Bbox) == 4 {
+		bbox = append(bbox, search.Bbox[0])
+		bbox = append(bbox, search.Bbox[1])
+		bbox = append(bbox, search.Bbox[2])
+		bbox = append(bbox, search.Bbox[3])
+	}
+	return bbox
 }
 
 // GetSearch godoc
@@ -76,7 +92,7 @@ func GetSearch(c *fiber.Ctx) error {
 		}
 	}
 
-	searchString := SQLString(searchMap)
+	searchString := sQLString(searchMap)
 
 	if bboxString != "" {
 		bbox := strings.Split(bboxString, ",")
@@ -90,7 +106,7 @@ func GetSearch(c *fiber.Ctx) error {
 
 		geoString := bbox2polygon(search.Bbox)
 
-		encodedString := Geoencoding(geoString)
+		encodedString := toWKT(geoString)
 
 		if len(search.Collections) > 0 {
 			database.DB.Db.Raw(searchString, encodedString, search.Collections).Scan(&items)
@@ -150,18 +166,7 @@ func PostSearch(c *fiber.Ctx) error {
 		limit = search.Limit
 	}
 
-	var bbox []float64
-	if len(search.Bbox) == 6 {
-		bbox = append(bbox, search.Bbox[0])
-		bbox = append(bbox, search.Bbox[1])
-		bbox = append(bbox, search.Bbox[3])
-		bbox = append(bbox, search.Bbox[4])
-	} else if len(search.Bbox) == 4 {
-		bbox = append(bbox, search.Bbox[0])
-		bbox = append(bbox, search.Bbox[1])
-		bbox = append(bbox, search.Bbox[2])
-		bbox = append(bbox, search.Bbox[3])
-	}
+	bbox := fix3dBbox(search)
 
 	if len(bbox) == 4 || search.Geometry.Type == "Point" ||
 		search.Geometry.Type == "Polygon" || search.Geometry.Type == "LineString" {
@@ -173,7 +178,7 @@ func PostSearch(c *fiber.Ctx) error {
 	if len(search.Ids) > 0 {
 		searchMap.Ids = 1
 	}
-	searchString := SQLString(searchMap)
+	searchString := sQLString(searchMap)
 
 	if searchMap.Geometry == 1 {
 		geoString := ""
@@ -204,26 +209,17 @@ func PostSearch(c *fiber.Ctx) error {
 			geoString += fmt.Sprintf("%f]", geom[1][1])
 			geoString += fmt.Sprintf("]}")
 		}
-		fmt.Println(geoString)
 
-		buf := new(bytes.Buffer)
-		buf.Write([]byte(geoString))
-		got, err := geoencoding.Read(buf, geoencoding.GeoJSON)
-		if err != nil {
-			log.Println(err)
-		}
-		err = geoencoding.Write(buf, got, geoencoding.WKT)
-		if err != nil {
-			log.Println(err)
-		}
+		encodedString := toWKT(geoString)
+
 		if searchMap.Collections == 1 && searchMap.Ids == 1 {
-			database.DB.Db.Raw(searchString, buf.String(), search.Collections, search.Ids).Scan(&items)
+			database.DB.Db.Raw(searchString, encodedString, search.Collections, search.Ids).Scan(&items)
 		} else if searchMap.Ids == 1 {
-			database.DB.Db.Raw(searchString, buf.String(), search.Ids).Scan(&items)
+			database.DB.Db.Raw(searchString, encodedString, search.Ids).Scan(&items)
 		} else if searchMap.Collections == 1 {
-			database.DB.Db.Raw(searchString, buf.String(), search.Collections).Scan(&items)
+			database.DB.Db.Raw(searchString, encodedString, search.Collections).Scan(&items)
 		} else {
-			database.DB.Db.Raw(searchString, buf.String()).Scan(&items)
+			database.DB.Db.Raw(searchString, encodedString).Scan(&items)
 		}
 	} else if searchMap.Collections == 1 || searchMap.Ids == 1 {
 		tx1 := database.DB.Db.Limit(limit)
