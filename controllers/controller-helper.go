@@ -58,18 +58,18 @@ func pointString(geom [2]float64) string {
 
 func sQLString(search_map models.SearchMap) string {
 	if search_map.Ids == 0 && search_map.Collections == 1 && search_map.Geometry == 0 {
-		return `SELECT * FROM items WHERE items.collection in ?`
+		return `SELECT * FROM items WHERE items.collection in ? LIMIT ?`
 	} else if search_map.Ids == 0 && search_map.Collections == 0 && search_map.Geometry == 1 {
-		return `SELECT * FROM items WHERE ST_Intersects(items.geometry, ST_GeomFromText(?, 4326))`
+		return `SELECT * FROM items WHERE ST_Intersects(items.geometry, ST_GeomFromText(?, 4326)) LIMIT ?`
 	} else if search_map.Ids == 1 && search_map.Collections == 0 && search_map.Geometry == 1 {
 		return `SELECT * FROM items WHERE ST_Intersects(items.geometry, ST_GeomFromText(?, 4326)) 
-		AND items.id in ?`
+		AND items.id in ? LIMIT ?`
 	} else if search_map.Ids == 0 && search_map.Collections == 1 && search_map.Geometry == 1 {
 		return `SELECT * FROM items WHERE ST_Intersects(items.geometry, ST_GeomFromText(?, 4326)) 
-		AND items.collection in ?`
+		AND items.collection in ? LIMIT ?`
 	} else if search_map.Ids == 1 && search_map.Collections == 1 && search_map.Geometry == 1 {
 		return `SELECT * FROM items WHERE ST_Intersects(items.geometry, ST_GeomFromText(?, 4326)) 
-		AND items.collection in ? AND items.id in ?`
+		AND items.collection in ? AND items.id in ? LIMIT ?`
 	}
 	return ""
 }

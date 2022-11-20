@@ -28,6 +28,7 @@ func GetSearch(c *fiber.Ctx) error {
 
 	bboxString := c.Query("bbox")
 	collectionsString := c.Query("collections")
+	limit := 100
 
 	if bboxString != "" {
 		searchMap.Geometry = 1
@@ -60,13 +61,12 @@ func GetSearch(c *fiber.Ctx) error {
 		if len(search.Collections) > 0 {
 			database.DB.Db.Raw(searchString, encodedString, search.Collections).Scan(&items)
 		} else {
-			database.DB.Db.Raw(searchString, encodedString).Scan(&items)
+			database.DB.Db.Raw(searchString, encodedString, limit).Scan(&items)
 		}
 	} else if len(search.Collections) > 0 {
-		database.DB.Db.Raw(searchString, search.Collections).Scan(&items)
+		database.DB.Db.Raw(searchString, search.Collections, limit).Scan(&items)
 	}
 
-	limit := 0
 	context := models.Context{
 		Returned: len(items),
 		Limit:    limit,
@@ -150,13 +150,13 @@ func PostSearch(c *fiber.Ctx) error {
 		encodedString := toWKT(geoString)
 
 		if searchMap.Collections == 1 && searchMap.Ids == 1 {
-			database.DB.Db.Raw(searchString, encodedString, search.Collections, search.Ids).Scan(&items)
+			database.DB.Db.Raw(searchString, encodedString, search.Collections, search.Ids, limit).Scan(&items)
 		} else if searchMap.Ids == 1 {
-			database.DB.Db.Raw(searchString, encodedString, search.Ids).Scan(&items)
+			database.DB.Db.Raw(searchString, encodedString, search.Ids, limit).Scan(&items)
 		} else if searchMap.Collections == 1 {
-			database.DB.Db.Raw(searchString, encodedString, search.Collections).Scan(&items)
+			database.DB.Db.Raw(searchString, encodedString, search.Collections, limit).Scan(&items)
 		} else {
-			database.DB.Db.Raw(searchString, encodedString).Scan(&items)
+			database.DB.Db.Raw(searchString, encodedString, limit).Scan(&items)
 		}
 	} else if searchMap.Collections == 1 || searchMap.Ids == 1 {
 		tx1 := database.DB.Db.Limit(limit)
