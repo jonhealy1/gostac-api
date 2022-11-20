@@ -187,27 +187,15 @@ func PostSearch(c *fiber.Ctx) error {
 		} else if search.Geometry.Type == "Point" {
 			geom := models.GeoJSONPoint{}.Coordinates
 			json.Unmarshal(search.Geometry.Coordinates, &geom)
-			geoString = fmt.Sprintf(`{"type":"Point", "Coordinates":[%f,%f]}`, geom[0], geom[1])
+			geoString = pointString(geom)
 		} else if search.Geometry.Type == "Polygon" {
 			geom := models.GeoJSONPolygon{}.Coordinates
 			json.Unmarshal(search.Geometry.Coordinates, &geom)
-			geoString = fmt.Sprintf(`{"type":"Polygon", "Coordinates":[[`)
-			for i := 0; i < len(geom[0])-1; i++ {
-				geoString += fmt.Sprintf("[%f,", geom[0][i][0])
-				geoString += fmt.Sprintf("%f],", geom[0][i][1])
-			}
-			geoString += fmt.Sprintf("[%f,", geom[0][len(geom[0])-1][0])
-			geoString += fmt.Sprintf("%f]", geom[0][len(geom[0])-1][1])
-			geoString += fmt.Sprintf("]]}")
+			geoString = polygonString(geom)
 		} else if search.Geometry.Type == "LineString" {
 			geom := models.GeoJSONLine{}.Coordinates
 			json.Unmarshal(search.Geometry.Coordinates, &geom)
-			geoString = fmt.Sprintf(`{"type":"LineString", "Coordinates":[`)
-			geoString += fmt.Sprintf("[%f,", geom[0][0])
-			geoString += fmt.Sprintf("%f],", geom[0][1])
-			geoString += fmt.Sprintf("[%f,", geom[1][0])
-			geoString += fmt.Sprintf("%f]", geom[1][1])
-			geoString += fmt.Sprintf("]}")
+			geoString = lineString(geom)
 		}
 
 		encodedString := toWKT(geoString)
