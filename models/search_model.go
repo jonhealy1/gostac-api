@@ -13,6 +13,12 @@ type Search struct {
 	GeometryCollection GeoJSONGeometryCollection `json:"geometrycollection,omitempty"`
 }
 
+type SearchMap struct {
+	Collections int
+	Ids         int
+	Geometry    int
+}
+
 type GeoJSONGeometryCollection struct {
 	Type       string            `json:"type"` // will always be "GeometryCollection"
 	Geometries []json.RawMessage `json:"geometries"`
