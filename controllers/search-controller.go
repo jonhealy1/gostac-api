@@ -28,7 +28,13 @@ func GetSearch(c *fiber.Ctx) error {
 
 	bboxString := c.Query("bbox")
 	collectionsString := c.Query("collections")
+	limitString := c.Query("limit")
+
 	limit := 100
+	if limitString != "" {
+		limit, _ = strconv.Atoi(limitString)
+	}
+	fmt.Println("limit: ", limit)
 
 	if bboxString != "" {
 		searchMap.Geometry = 1
@@ -59,7 +65,7 @@ func GetSearch(c *fiber.Ctx) error {
 		encodedString := toWKT(geoString)
 
 		if len(search.Collections) > 0 {
-			database.DB.Db.Raw(searchString, encodedString, search.Collections).Scan(&items)
+			database.DB.Db.Raw(searchString, encodedString, search.Collections, limit).Scan(&items)
 		} else {
 			database.DB.Db.Raw(searchString, encodedString, limit).Scan(&items)
 		}
