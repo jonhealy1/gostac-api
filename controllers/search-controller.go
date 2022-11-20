@@ -26,33 +26,35 @@ import (
 // @Router /search [get]
 func GetSearch(c *fiber.Ctx) error {
 	bboxString := c.Query("bbox")
-	bbox := strings.Split(bboxString, ",")
-
-	var search models.Search
 	var items []models.Item
+	if bboxString != "" {
+		bbox := strings.Split(bboxString, ",")
 
-	b1, _ := strconv.ParseFloat(bbox[0], 32)
-	b2, _ := strconv.ParseFloat(bbox[1], 32)
-	b3, _ := strconv.ParseFloat(bbox[2], 32)
-	b4, _ := strconv.ParseFloat(bbox[3], 32)
+		var search models.Search
 
-	search.Bbox = append(search.Bbox, b1, b2, b3, b4)
+		b1, _ := strconv.ParseFloat(bbox[0], 32)
+		b2, _ := strconv.ParseFloat(bbox[1], 32)
+		b3, _ := strconv.ParseFloat(bbox[2], 32)
+		b4, _ := strconv.ParseFloat(bbox[3], 32)
 
-	geoString := bbox2polygon(search.Bbox)
-	buf := new(bytes.Buffer)
-	buf.Write([]byte(geoString))
-	got, err := geoencoding.Read(buf, geoencoding.GeoJSON)
-	if err != nil {
-		log.Println(err)
+		search.Bbox = append(search.Bbox, b1, b2, b3, b4)
+
+		geoString := bbox2polygon(search.Bbox)
+		buf := new(bytes.Buffer)
+		buf.Write([]byte(geoString))
+		got, err := geoencoding.Read(buf, geoencoding.GeoJSON)
+		if err != nil {
+			log.Println(err)
+		}
+		err = geoencoding.Write(buf, got, geoencoding.WKT)
+		if err != nil {
+			log.Println(err)
+		}
+
+		database.DB.Db.Raw(`
+			SELECT * FROM items WHERE ST_Intersects(items.geometry, ST_GeomFromText(?, 4326))`,
+			buf.String()).Scan(&items)
 	}
-	err = geoencoding.Write(buf, got, geoencoding.WKT)
-	if err != nil {
-		log.Println(err)
-	}
-
-	database.DB.Db.Raw(`
-		SELECT * FROM items WHERE ST_Intersects(items.geometry, ST_GeomFromText(?, 4326))`,
-		buf.String()).Scan(&items)
 
 	limit := 0
 	context := models.Context{
