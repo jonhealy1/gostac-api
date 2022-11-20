@@ -33,6 +33,20 @@ func SQLString(search_map models.SearchMap) string {
 	return ""
 }
 
+func Geoencoding(geoString string) string {
+	buf := new(bytes.Buffer)
+	buf.Write([]byte(geoString))
+	got, err := geoencoding.Read(buf, geoencoding.GeoJSON)
+	if err != nil {
+		log.Println(err)
+	}
+	err = geoencoding.Write(buf, got, geoencoding.WKT)
+	if err != nil {
+		log.Println(err)
+	}
+	return buf.String()
+}
+
 // GetSearch godoc
 // @Summary GET Search request
 // @Description Search for STAC items via the Search endpoint
@@ -76,21 +90,12 @@ func GetSearch(c *fiber.Ctx) error {
 
 		geoString := bbox2polygon(search.Bbox)
 
-		buf := new(bytes.Buffer)
-		buf.Write([]byte(geoString))
-		got, err := geoencoding.Read(buf, geoencoding.GeoJSON)
-		if err != nil {
-			log.Println(err)
-		}
-		err = geoencoding.Write(buf, got, geoencoding.WKT)
-		if err != nil {
-			log.Println(err)
-		}
+		encodedString := Geoencoding(geoString)
 
 		if len(search.Collections) > 0 {
-			database.DB.Db.Raw(searchString, buf.String(), search.Collections).Scan(&items)
+			database.DB.Db.Raw(searchString, encodedString, search.Collections).Scan(&items)
 		} else {
-			database.DB.Db.Raw(searchString, buf.String()).Scan(&items)
+			database.DB.Db.Raw(searchString, encodedString).Scan(&items)
 		}
 	} else if len(search.Collections) > 0 {
 		database.DB.Db.Raw(searchString, search.Collections).Scan(&items)
