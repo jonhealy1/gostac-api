@@ -15,6 +15,10 @@ import (
 	"github.com/spatial-go/geoos/geoencoding"
 )
 
+func SearchMap(search_map map[string]int) string {
+	return "hello"
+}
+
 // GetSearch godoc
 // @Summary GET Search request
 // @Description Search for STAC items via the Search endpoint
@@ -25,12 +29,22 @@ import (
 // @Param bbox1, bbox2, bbox3, bbox4 path float true "Bbox"
 // @Router /search [get]
 func GetSearch(c *fiber.Ctx) error {
-	bboxString := c.Query("bbox")
 	var items []models.Item
+	var search models.Search
+
+	bboxString := c.Query("bbox")
+	collectionsString := c.Query("collections")
+
+	if collectionsString != "" {
+		collections := strings.Split(collectionsString, ",")
+		for i := 0; i < len(collections); i++ {
+			search.Collections = append(search.Collections, collections[i])
+		}
+	}
+	fmt.Println(search.Collections)
+
 	if bboxString != "" {
 		bbox := strings.Split(bboxString, ",")
-
-		var search models.Search
 
 		b1, _ := strconv.ParseFloat(bbox[0], 32)
 		b2, _ := strconv.ParseFloat(bbox[1], 32)
@@ -51,9 +65,20 @@ func GetSearch(c *fiber.Ctx) error {
 			log.Println(err)
 		}
 
+		if len(search.Collections) > 0 {
+			database.DB.Db.Raw(`
+				SELECT * FROM items WHERE ST_Intersects(items.geometry, ST_GeomFromText(?, 4326)) 
+				AND items.collection in ?`,
+				buf.String(), search.Collections).Scan(&items)
+		} else {
+			database.DB.Db.Raw(`
+				SELECT * FROM items WHERE ST_Intersects(items.geometry, ST_GeomFromText(?, 4326))`,
+				buf.String()).Scan(&items)
+		}
+	} else if len(search.Collections) > 0 {
 		database.DB.Db.Raw(`
-			SELECT * FROM items WHERE ST_Intersects(items.geometry, ST_GeomFromText(?, 4326))`,
-			buf.String()).Scan(&items)
+			SELECT * FROM items WHERE items.collection in ?`,
+			search.Collections).Scan(&items)
 	}
 
 	limit := 0
