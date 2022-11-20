@@ -147,6 +147,50 @@ func TestSearchGeometry(t *testing.T) {
 	assert.Equalf(t, "sentinel-s2-l2a-cogs-test", search_response.Features[0].Collection, "search collections")
 }
 
+func TestSearchGeometryLimit(t *testing.T) {
+	jsonBody := []byte(`{
+		"limit": 1,
+		"collections": ["sentinel-s2-l2a-cogs-test"],
+		"geometry": {
+			"type": "Polygon",
+        	"coordinates": [[
+				[170.8515625, -74.14512718337613],
+				[178.35937499999999, -74.14512718337613],
+				[178.35937499999999, -70.15296965617042],
+				[170.8515625, -70.15296965617042],
+				[170.8515625, -74.14512718337613]
+          	]]
+      	}
+	}`)
+	bodyReader := bytes.NewReader(jsonBody)
+
+	resp, err := http.Post(
+		"http://localhost:6002/search",
+		"application/json",
+		bodyReader,
+	)
+	if err != nil {
+		log.Fatalf("An Error Occured %v", err)
+	}
+	defer resp.Body.Close()
+
+	assert.Equalf(t, 200, resp.StatusCode, "create item")
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	var search_response responses.SearchResponse
+	json.Unmarshal(body, &search_response)
+
+	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
+	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
+	assert.Equalf(t, 1, search_response.Context.Limit, "search geometry")
+	assert.Equalf(t, 1, search_response.Context.Returned, "search geometry")
+	assert.Equalf(t, "sentinel-s2-l2a-cogs-test", search_response.Features[0].Collection, "search collections")
+}
+
 func TestSearchNoGeometry(t *testing.T) {
 	jsonBody := []byte(`{
 		"collections": ["sentinel-s2-l2a-cogs-test"],
@@ -476,8 +520,35 @@ func TestGetSearchBbox(t *testing.T) {
 
 	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
-	assert.Equalf(t, 0, search_response.Context.Limit, "search geometry")
+	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
 	assert.Equalf(t, 50, search_response.Context.Returned, "search geometry")
+	assert.Equalf(t, "sentinel-s2-l2a-cogs-test", search_response.Features[0].Collection, "search collections")
+}
+
+func TestGetSearchBboxLimit(t *testing.T) {
+
+	resp, err := http.Get(
+		"http://localhost:6002/search?bbox=97.504892,-75.254738,179.321298,-65.431580&limit=10",
+	)
+	if err != nil {
+		log.Fatalf("An Error Occured %v", err)
+	}
+	defer resp.Body.Close()
+
+	assert.Equalf(t, 200, resp.StatusCode, "create item")
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	var search_response responses.SearchResponse
+	json.Unmarshal(body, &search_response)
+
+	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
+	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
+	assert.Equalf(t, 10, search_response.Context.Limit, "search geometry")
+	assert.Equalf(t, 10, search_response.Context.Returned, "search geometry")
 	assert.Equalf(t, "sentinel-s2-l2a-cogs-test", search_response.Features[0].Collection, "search collections")
 }
 
@@ -502,6 +573,6 @@ func TestGetSearchBboxNoResults(t *testing.T) {
 
 	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
-	assert.Equalf(t, 0, search_response.Context.Limit, "search geometry")
+	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
 	assert.Equalf(t, 0, search_response.Context.Returned, "search geometry")
 }

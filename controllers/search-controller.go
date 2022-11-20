@@ -1,18 +1,15 @@
 package controllers
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"go-stac-api-postgres/database"
 	"go-stac-api-postgres/models"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/spatial-go/geoos/geoencoding"
 )
 
 // GetSearch godoc
@@ -25,36 +22,57 @@ import (
 // @Param bbox1, bbox2, bbox3, bbox4 path float true "Bbox"
 // @Router /search [get]
 func GetSearch(c *fiber.Ctx) error {
-	bboxString := c.Query("bbox")
-	bbox := strings.Split(bboxString, ",")
-
-	var search models.Search
 	var items []models.Item
+	var search models.Search
+	var searchMap models.SearchMap
 
-	b1, _ := strconv.ParseFloat(bbox[0], 32)
-	b2, _ := strconv.ParseFloat(bbox[1], 32)
-	b3, _ := strconv.ParseFloat(bbox[2], 32)
-	b4, _ := strconv.ParseFloat(bbox[3], 32)
+	bboxString := c.Query("bbox")
+	collectionsString := c.Query("collections")
+	limitString := c.Query("limit")
 
-	search.Bbox = append(search.Bbox, b1, b2, b3, b4)
-
-	geoString := bbox2polygon(search.Bbox)
-	buf := new(bytes.Buffer)
-	buf.Write([]byte(geoString))
-	got, err := geoencoding.Read(buf, geoencoding.GeoJSON)
-	if err != nil {
-		log.Println(err)
+	limit := 100
+	if limitString != "" {
+		limit, _ = strconv.Atoi(limitString)
 	}
-	err = geoencoding.Write(buf, got, geoencoding.WKT)
-	if err != nil {
-		log.Println(err)
+	fmt.Println("limit: ", limit)
+
+	if bboxString != "" {
+		searchMap.Geometry = 1
 	}
 
-	database.DB.Db.Raw(`
-		SELECT * FROM items WHERE ST_Intersects(items.geometry, ST_GeomFromText(?, 4326))`,
-		buf.String()).Scan(&items)
+	if collectionsString != "" {
+		searchMap.Collections = 1
+		collections := strings.Split(collectionsString, ",")
+		for i := 0; i < len(collections); i++ {
+			search.Collections = append(search.Collections, collections[i])
+		}
+	}
 
-	limit := 0
+	searchString := sQLString(searchMap)
+
+	if bboxString != "" {
+		bbox := strings.Split(bboxString, ",")
+
+		b1, _ := strconv.ParseFloat(bbox[0], 32)
+		b2, _ := strconv.ParseFloat(bbox[1], 32)
+		b3, _ := strconv.ParseFloat(bbox[2], 32)
+		b4, _ := strconv.ParseFloat(bbox[3], 32)
+
+		search.Bbox = append(search.Bbox, b1, b2, b3, b4)
+
+		geoString := bbox2polygon(search.Bbox)
+
+		encodedString := toWKT(geoString)
+
+		if len(search.Collections) > 0 {
+			database.DB.Db.Raw(searchString, encodedString, search.Collections, limit).Scan(&items)
+		} else {
+			database.DB.Db.Raw(searchString, encodedString, limit).Scan(&items)
+		}
+	} else if len(search.Collections) > 0 {
+		database.DB.Db.Raw(searchString, search.Collections, limit).Scan(&items)
+	}
+
 	context := models.Context{
 		Returned: len(items),
 		Limit:    limit,
@@ -89,6 +107,7 @@ func GetSearch(c *fiber.Ctx) error {
 func PostSearch(c *fiber.Ctx) error {
 	var search models.Search
 	var items []models.Item
+	var searchMap models.SearchMap
 
 	if err := c.BodyParser(&search); err != nil {
 		return c.Status(http.StatusBadRequest).JSON(&fiber.Map{
@@ -102,82 +121,50 @@ func PostSearch(c *fiber.Ctx) error {
 		limit = search.Limit
 	}
 
-	var bbox []float64
-	if len(search.Bbox) == 6 {
-		bbox = append(bbox, search.Bbox[0])
-		bbox = append(bbox, search.Bbox[1])
-		bbox = append(bbox, search.Bbox[3])
-		bbox = append(bbox, search.Bbox[4])
-	} else if len(search.Bbox) == 4 {
-		bbox = append(bbox, search.Bbox[0])
-		bbox = append(bbox, search.Bbox[1])
-		bbox = append(bbox, search.Bbox[2])
-		bbox = append(bbox, search.Bbox[3])
-	}
+	bbox := fix3dBbox(search)
 
 	if len(bbox) == 4 || search.Geometry.Type == "Point" ||
 		search.Geometry.Type == "Polygon" || search.Geometry.Type == "LineString" {
+		searchMap.Geometry = 1
+	}
+	if len(search.Collections) > 0 {
+		searchMap.Collections = 1
+	}
+	if len(search.Ids) > 0 {
+		searchMap.Ids = 1
+	}
+	searchString := sQLString(searchMap)
+
+	if searchMap.Geometry == 1 {
 		geoString := ""
 		if len(bbox) == 4 {
 			geoString = bbox2polygon(bbox)
 		} else if search.Geometry.Type == "Point" {
 			geom := models.GeoJSONPoint{}.Coordinates
 			json.Unmarshal(search.Geometry.Coordinates, &geom)
-			geoString = fmt.Sprintf(`{"type":"Point", "Coordinates":[%f,%f]}`, geom[0], geom[1])
+			geoString = pointString(geom)
 		} else if search.Geometry.Type == "Polygon" {
 			geom := models.GeoJSONPolygon{}.Coordinates
 			json.Unmarshal(search.Geometry.Coordinates, &geom)
-			geoString = fmt.Sprintf(`{"type":"Polygon", "Coordinates":[[`)
-			for i := 0; i < len(geom[0])-1; i++ {
-				geoString += fmt.Sprintf("[%f,", geom[0][i][0])
-				geoString += fmt.Sprintf("%f],", geom[0][i][1])
-			}
-			geoString += fmt.Sprintf("[%f,", geom[0][len(geom[0])-1][0])
-			geoString += fmt.Sprintf("%f]", geom[0][len(geom[0])-1][1])
-			geoString += fmt.Sprintf("]]}")
+			geoString = polygonString(geom)
 		} else if search.Geometry.Type == "LineString" {
 			geom := models.GeoJSONLine{}.Coordinates
 			json.Unmarshal(search.Geometry.Coordinates, &geom)
-			geoString = fmt.Sprintf(`{"type":"LineString", "Coordinates":[`)
-			geoString += fmt.Sprintf("[%f,", geom[0][0])
-			geoString += fmt.Sprintf("%f],", geom[0][1])
-			geoString += fmt.Sprintf("[%f,", geom[1][0])
-			geoString += fmt.Sprintf("%f]", geom[1][1])
-			geoString += fmt.Sprintf("]}")
+			geoString = lineString(geom)
 		}
-		fmt.Println(geoString)
 
-		buf := new(bytes.Buffer)
-		buf.Write([]byte(geoString))
-		got, err := geoencoding.Read(buf, geoencoding.GeoJSON)
-		if err != nil {
-			log.Println(err)
-		}
-		err = geoencoding.Write(buf, got, geoencoding.WKT)
-		if err != nil {
-			log.Println(err)
-		}
-		if len(search.Collections) > 0 && len(search.Ids) > 0 {
-			database.DB.Db.Raw(`
-				SELECT * FROM items WHERE ST_Intersects(items.geometry, ST_GeomFromText(?, 4326)) 
-				AND items.collection in ? AND items.id in ?`,
-				buf.String(), search.Collections, search.Ids).Scan(&items)
-		} else if len(search.Ids) > 0 {
-			database.DB.Db.Raw(`
-				SELECT * FROM items WHERE ST_Intersects(items.geometry, ST_GeomFromText(?, 4326)) 
-				AND items.id in ?`,
-				buf.String(), search.Ids).Scan(&items)
-		} else if len(search.Collections) > 0 {
-			database.DB.Db.Raw(`
-				SELECT * FROM items WHERE ST_Intersects(items.geometry, ST_GeomFromText(?, 4326)) 
-				AND items.collection in ?`,
-				buf.String(), search.Collections).Scan(&items)
+		encodedString := toWKT(geoString)
+
+		if searchMap.Collections == 1 && searchMap.Ids == 1 {
+			database.DB.Db.Raw(searchString, encodedString, search.Collections, search.Ids, limit).Scan(&items)
+		} else if searchMap.Ids == 1 {
+			database.DB.Db.Raw(searchString, encodedString, search.Ids, limit).Scan(&items)
+		} else if searchMap.Collections == 1 {
+			database.DB.Db.Raw(searchString, encodedString, search.Collections, limit).Scan(&items)
 		} else {
-			database.DB.Db.Raw(`
-				SELECT * FROM items WHERE ST_Intersects(items.geometry, ST_GeomFromText(?, 4326))`,
-				buf.String()).Scan(&items)
+			database.DB.Db.Raw(searchString, encodedString, limit).Scan(&items)
 		}
-	} else if len(search.Collections) > 0 || len(search.Ids) > 0 {
+	} else if searchMap.Collections == 1 || searchMap.Ids == 1 {
 		tx1 := database.DB.Db.Limit(limit)
 		tx2 := database.DB.Db.Limit(limit)
 		if len(search.Collections) > 0 {
