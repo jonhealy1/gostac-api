@@ -12,10 +12,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func Split(r rune) bool {
-	return r == ':' || r == ',' || r == '{' || r == '}' || r == '[' || r == ']' || r == '"' || r == ' '
-}
-
 // GetSearch godoc
 // @Summary GET Search request
 // @Description Search for STAC items via the Search endpoint
