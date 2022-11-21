@@ -33,7 +33,7 @@ func GetSearch(c *fiber.Ctx) error {
 	geometryString := c.Query("geometry")
 
 	geomType := ""
-
+	line := [][2]float64{}
 	point := models.GeoJSONPoint{}.Coordinates
 	if geometryString != "" {
 		geomSlice := strings.FieldsFunc(geometryString, split)
@@ -42,6 +42,18 @@ func GetSearch(c *fiber.Ctx) error {
 		if geomType == "Point" {
 			point[0], _ = strconv.ParseFloat(geomSlice[3], 32)
 			point[1], _ = strconv.ParseFloat(geomSlice[4], 32)
+			searchMap.Geometry = 1
+		}
+		if geomType == "LineString" {
+			val1, _ := strconv.ParseFloat(geomSlice[3], 32)
+			val2, _ := strconv.ParseFloat(geomSlice[4], 32)
+			val3, _ := strconv.ParseFloat(geomSlice[5], 32)
+			val4, _ := strconv.ParseFloat(geomSlice[6], 32)
+
+			line = [][2]float64{
+				{val1, val2},
+				{val3, val4},
+			}
 			searchMap.Geometry = 1
 		}
 	}
@@ -80,6 +92,8 @@ func GetSearch(c *fiber.Ctx) error {
 		} else if geometryString != "" {
 			if geomType == "Point" {
 				geoString = pointString(point)
+			} else if geomType == "LineString" {
+				geoString = lineString(line)
 			}
 		}
 
