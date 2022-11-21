@@ -94,6 +94,6 @@ func fix3dBbox(search models.Search) []float64 {
 	return bbox
 }
 
-func Split(r rune) bool {
+func split(r rune) bool {
 	return r == ':' || r == ',' || r == '{' || r == '}' || r == '[' || r == ']' || r == '"' || r == ' '
 }

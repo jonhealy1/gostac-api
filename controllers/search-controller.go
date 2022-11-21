@@ -36,7 +36,7 @@ func GetSearch(c *fiber.Ctx) error {
 
 	point := models.GeoJSONPoint{}.Coordinates
 	if geometryString != "" {
-		geomSlice := strings.FieldsFunc(geometryString, Split)
+		geomSlice := strings.FieldsFunc(geometryString, split)
 		fmt.Println(geomSlice)
 		geomType = geomSlice[1]
 		if geomType == "Point" {
