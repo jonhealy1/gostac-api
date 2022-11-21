@@ -576,3 +576,56 @@ func TestGetSearchBboxNoResults(t *testing.T) {
 	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
 	assert.Equalf(t, 0, search_response.Context.Returned, "search geometry")
 }
+
+func TestGetSearchLine(t *testing.T) {
+
+	resp, err := http.Get(
+		`http://localhost:6002/search?geometry={"type": "LineString","coordinates": [[179.85156249999997,-70.554563528593656],[171.101642,-75.690647]]}`,
+	)
+	if err != nil {
+		log.Fatalf("An Error Occured %v", err)
+	}
+	defer resp.Body.Close()
+
+	assert.Equalf(t, 200, resp.StatusCode, "create item")
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	var search_response responses.SearchResponse
+	json.Unmarshal(body, &search_response)
+
+	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
+	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
+	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
+	assert.Equalf(t, 49, search_response.Context.Returned, "search geometry")
+	assert.Equalf(t, "sentinel-s2-l2a-cogs-test", search_response.Features[0].Collection, "search collections")
+}
+
+func TestGetSearchLineNoResults(t *testing.T) {
+
+	resp, err := http.Get(
+		`http://localhost:6002/search?geometry={"type": "LineString","coordinates": [[19.85156249999997,-70.554563528593656],[11.101642,-75.690647]]}`,
+	)
+	if err != nil {
+		log.Fatalf("An Error Occured %v", err)
+	}
+	defer resp.Body.Close()
+
+	assert.Equalf(t, 200, resp.StatusCode, "create item")
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	var search_response responses.SearchResponse
+	json.Unmarshal(body, &search_response)
+
+	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
+	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
+	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
+	assert.Equalf(t, 0, search_response.Context.Returned, "search geometry")
+}
