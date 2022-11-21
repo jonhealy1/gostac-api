@@ -12,6 +12,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+func Split(r rune) bool {
+	return r == ':' || r == ',' || r == '{' || r == '}' || r == '[' || r == ']' || r == '"' || r == ' '
+}
+
 // GetSearch godoc
 // @Summary GET Search request
 // @Description Search for STAC items via the Search endpoint
@@ -25,10 +29,26 @@ func GetSearch(c *fiber.Ctx) error {
 	var items []models.Item
 	var search models.Search
 	var searchMap models.SearchMap
+	geoString := ""
 
 	bboxString := c.Query("bbox")
 	collectionsString := c.Query("collections")
 	limitString := c.Query("limit")
+	geometryString := c.Query("geometry")
+
+	geomType := ""
+
+	point := models.GeoJSONPoint{}.Coordinates
+	if geometryString != "" {
+		geomSlice := strings.FieldsFunc(geometryString, Split)
+		fmt.Println(geomSlice)
+		geomType = geomSlice[1]
+		if geomType == "Point" {
+			point[0], _ = strconv.ParseFloat(geomSlice[3], 32)
+			point[1], _ = strconv.ParseFloat(geomSlice[4], 32)
+			searchMap.Geometry = 1
+		}
+	}
 
 	limit := 100
 	if limitString != "" {
@@ -50,17 +70,22 @@ func GetSearch(c *fiber.Ctx) error {
 
 	searchString := sQLString(searchMap)
 
-	if bboxString != "" {
-		bbox := strings.Split(bboxString, ",")
+	if searchMap.Geometry == 1 {
+		if bboxString != "" {
+			bbox := strings.Split(bboxString, ",")
 
-		b1, _ := strconv.ParseFloat(bbox[0], 32)
-		b2, _ := strconv.ParseFloat(bbox[1], 32)
-		b3, _ := strconv.ParseFloat(bbox[2], 32)
-		b4, _ := strconv.ParseFloat(bbox[3], 32)
+			b1, _ := strconv.ParseFloat(bbox[0], 32)
+			b2, _ := strconv.ParseFloat(bbox[1], 32)
+			b3, _ := strconv.ParseFloat(bbox[2], 32)
+			b4, _ := strconv.ParseFloat(bbox[3], 32)
 
-		search.Bbox = append(search.Bbox, b1, b2, b3, b4)
-
-		geoString := bbox2polygon(search.Bbox)
+			search.Bbox = append(search.Bbox, b1, b2, b3, b4)
+			geoString = bbox2polygon(search.Bbox)
+		} else if geometryString != "" {
+			if geomType == "Point" {
+				geoString = pointString(point)
+			}
+		}
 
 		encodedString := toWKT(geoString)
 
