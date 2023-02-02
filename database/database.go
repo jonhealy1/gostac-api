@@ -29,22 +29,10 @@ func getEnv(key string) string {
 	return os.Getenv(key)
 }
 
-func Docker() bool {
-	if _, err := os.Stat("/.dockerenv"); err != nil {
-		return false
-	}
-	return true
-}
-
 func ConnectDb() {
-	host, port := "", ""
-	if Docker() {
-		host = getEnv("DOCKER_HOST")
-		port = getEnv("DOCKER_PORT")
-	} else {
-		host = getEnv("POSTGRES_HOST")
-		port = getEnv("POSTGRES_PORT")
-	}
+	host := getEnv("POSTGRES_HOST")
+	port := getEnv("POSTGRES_PORT")
+
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		host, port, getEnv("POSTGRES_USER"), getEnv("POSTGRES_PASS"),
