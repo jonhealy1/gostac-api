@@ -1,10 +1,14 @@
 version: '3.8'
 services: 
   api:
-    build: "."
+    build: .
     restart: always 
-    env_file:
-      - .env
+    environment:
+      - POSTGRES_USER=username
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DBNAME=postgis
+      - POSTGRES_PORT=5432
+      - POSTGRES_HOST=database
     ports:
       - "6002:6002"
     expose:
