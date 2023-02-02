@@ -29,12 +29,26 @@ func getEnv(key string) string {
 	return os.Getenv(key)
 }
 
+func Docker() bool {
+	if _, err := os.Stat("/.dockerenv"); err != nil {
+		return false
+	}
+	return true
+}
+
 func ConnectDb() {
+	host := ""
+	if Docker() {
+		host = "database"
+	} else {
+		host = getEnv("POSTGRES_HOST")
+	}
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		getEnv("POSTGRES_HOST"), getEnv("POSTGRES_PORT"), getEnv("POSTGRES_USER"),
+		host, getEnv("POSTGRES_PORT"), getEnv("POSTGRES_USER"),
 		getEnv("POSTGRES_PASS"), getEnv("POSTGRES_DBNAME"), "disable",
 	)
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
