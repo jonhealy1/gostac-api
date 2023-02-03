@@ -121,7 +121,6 @@ func GetSearch(c *fiber.Ctx) error {
 	}
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
-		"message":  "item collection retrieved successfully",
 		"context":  context,
 		"type":     "FeatureCollection",
 		"features": stac_items,
@@ -235,7 +234,6 @@ func PostSearch(c *fiber.Ctx) error {
 	}
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
-		"message":  "item collection retrieved successfully",
 		"context":  context,
 		"type":     "FeatureCollection",
 		"features": stac_items,

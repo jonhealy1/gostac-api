@@ -1,10 +1,9 @@
 # goapistac  
-### a STAC api written in go with fiber, gorm and postgres   
+### a STAC api written in go with fiber, gorm and postgres  
+#### https://documenter.getpostman.com/view/12888943/VVBXwQnu   
 -------
-  
-### RUN LOCALLY (localhost:6002):  
-- Public postman collection docs are available here: https://documenter.getpostman.com/view/12888943/VVBXwQnu   
 
+### RUN LOCALLY (localhost:6002):   
 ```$ make database```  
 ```$ go build```  
 ```$ go run app.go```  
@@ -15,3 +14,9 @@
 ### PSQL:
 ```$ docker exec -it stac-db bash```
 ```$ psql```
+
+### RUN IN DOCKER (localhost:6002):  
+```$ make database```  
+```$ make api```  
+   
+

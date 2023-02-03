@@ -21,6 +21,7 @@ WORKDIR /app
 
 # `boilerplate` should be replaced here as well
 COPY --from=build /go/src/go-stac-api/app .
+COPY --from=build /go/src/go-stac-api/.env .
 
 # Exposes port 3000 because our program listens on that port
 EXPOSE 6000

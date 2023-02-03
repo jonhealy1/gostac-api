@@ -20,7 +20,7 @@ type Dbinstance struct {
 var DB Dbinstance
 
 func getEnv(key string) string {
-	err := godotenv.Load(".env")
+	err := godotenv.Load()
 
 	if err != nil {
 		log.Fatalf("Error loading .env file")
@@ -30,11 +30,17 @@ func getEnv(key string) string {
 }
 
 func ConnectDb() {
+	host := getEnv("POSTGRES_HOST")
+	port := getEnv("POSTGRES_PORT")
+	user := getEnv("POSTGRES_USER")
+	pass := getEnv("POSTGRES_PASS")
+	dbname := getEnv("POSTGRES_DBNAME")
+
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		getEnv("POSTGRES_HOST"), getEnv("POSTGRES_PORT"), getEnv("POSTGRES_USER"),
-		getEnv("POSTGRES_PASS"), getEnv("POSTGRES_DBNAME"), "disable",
+		host, port, user, pass, dbname, "disable",
 	)
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
