@@ -29,6 +29,10 @@ func getEnv(key string) string {
 	return os.Getenv(key)
 }
 
+// ConnectDb creates a database connection and sets the DB global variable.
+// The function gets the database connection parameters from environment variables POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_PASS, and POSTGRES_DBNAME.
+// It uses the gorm library to create the database connection and configures it to log database queries in the "info" mode.
+// The function also runs database migrations and creates the "items" table if it does not exist.
 func ConnectDb() {
 	host := getEnv("POSTGRES_HOST")
 	port := getEnv("POSTGRES_PORT")
