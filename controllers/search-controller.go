@@ -78,6 +78,8 @@ func GetSearch(c *fiber.Ctx) error {
 
 	searchString := sQLString(searchMap)
 
+	searchString += fmt.Sprintf("LIMIT %d", limit)
+
 	if searchMap.Geometry == 1 {
 		if bboxString != "" {
 			bbox := strings.Split(bboxString, ",")
@@ -169,6 +171,12 @@ func PostSearch(c *fiber.Ctx) error {
 	}
 	searchString := sQLString(searchMap)
 
+	if len(search.Sortby) > 0 {
+		searchString = BuildSortString(searchString, search)
+	}
+
+	searchString += fmt.Sprintf(" LIMIT %d", limit)
+
 	if searchMap.Geometry == 1 {
 		geoString := ""
 		if len(bbox) == 4 {
@@ -190,11 +198,11 @@ func PostSearch(c *fiber.Ctx) error {
 		encodedString := toWKT(geoString)
 
 		if searchMap.Collections == 1 && searchMap.Ids == 1 {
-			database.DB.Db.Raw(searchString, encodedString, search.Collections, search.Ids, limit).Scan(&items)
+			database.DB.Db.Raw(searchString, encodedString, search.Collections, search.Ids).Scan(&items)
 		} else if searchMap.Ids == 1 {
-			database.DB.Db.Raw(searchString, encodedString, search.Ids, limit).Scan(&items)
+			database.DB.Db.Raw(searchString, encodedString, search.Ids).Scan(&items)
 		} else if searchMap.Collections == 1 {
-			database.DB.Db.Raw(searchString, encodedString, search.Collections, limit).Scan(&items)
+			database.DB.Db.Raw(searchString, encodedString, search.Collections).Scan(&items)
 		} else {
 			database.DB.Db.Raw(searchString, encodedString, limit).Scan(&items)
 		}
@@ -240,4 +248,22 @@ func PostSearch(c *fiber.Ctx) error {
 	})
 
 	return nil
+}
+
+// buildSearchString takes a pointer to a Search struct and returns a string that is the ORDER BY
+// clause for a SQL query.
+func BuildSortString(searchString string, search models.Search) string {
+	var fieldStrings []string
+	for _, sort := range search.Sortby {
+		var field_string string
+		if strings.ContainsRune(sort.Field, '.') {
+			substrings := strings.Split(sort.Field, ".")
+			field_string = fmt.Sprintf("'%s' -> '%s'", substrings[0], substrings[1])
+		} else {
+			field_string = fmt.Sprintf("'%s'", sort.Field)
+		}
+		fieldStrings = append(fieldStrings, fmt.Sprintf("data -> %s %s", field_string, sort.Direction))
+	}
+	searchString += " ORDER BY " + strings.Join(fieldStrings, ", ")
+	return searchString
 }
