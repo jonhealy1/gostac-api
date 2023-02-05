@@ -16,5 +16,6 @@ psql-shell:		## Enter psql shell
 
 .PHONY: test
 test:
+	go clean -testcache
 	go test go-stac-api-postgres/tests
 
