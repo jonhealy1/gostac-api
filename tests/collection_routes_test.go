@@ -42,34 +42,77 @@ func Setup() *fiber.App {
 }
 
 func TestCreateCollection(t *testing.T) {
-	var expected_collection models.StacCollection
+	expectedCollection := models.StacCollection{}
 	jsonFile, err := os.Open("setup_data/collection.json")
-
 	if err != nil {
-		fmt.Println(err)
+		t.Fatalf("Failed to open setup data: %v", err)
 	}
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	json.Unmarshal(byteValue, &expected_collection)
-	responseBody := bytes.NewBuffer(byteValue)
+	defer jsonFile.Close()
 
-	resp, err := http.Post("http://localhost:6002/collections", "application/json", responseBody)
+	byteValue, err := ioutil.ReadAll(jsonFile)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		t.Fatalf("Failed to read setup data: %v", err)
+	}
+	if err := json.Unmarshal(byteValue, &expectedCollection); err != nil {
+		t.Fatalf("Failed to unmarshal setup data: %v", err)
+	}
+
+	req, err := http.NewRequest("POST", "http://localhost:6002/collections", bytes.NewBuffer(byteValue))
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatalf("Failed to execute request: %v", err)
 	}
 	defer resp.Body.Close()
 
-	assert.Equalf(t, 201, resp.StatusCode, "create collection")
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalln(err)
+	if got, want := resp.StatusCode, http.StatusCreated; got != want {
+		t.Errorf("Unexpected response status code: got %d, want %d", got, want)
 	}
 
-	var collection_response responses.CollectionResponse
-	json.Unmarshal(body, &collection_response)
+	var responseBody responses.CollectionResponse
+	if err := json.NewDecoder(resp.Body).Decode(&responseBody); err != nil {
+		t.Fatalf("Failed to decode response body: %v", err)
+	}
 
-	assert.Equalf(t, "success", collection_response.Message, "create collection")
+	if got, want := responseBody.Message, "success"; got != want {
+		t.Errorf("Unexpected response message: got %q, want %q", got, want)
+	}
 }
+
+// func TestCreateCollection(t *testing.T) {
+// 	var expected_collection models.StacCollection
+// 	jsonFile, err := os.Open("setup_data/collection.json")
+
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
+// 	byteValue, _ := ioutil.ReadAll(jsonFile)
+// 	json.Unmarshal(byteValue, &expected_collection)
+// 	responseBody := bytes.NewBuffer(byteValue)
+
+// 	resp, err := http.Post("http://localhost:6002/collections", "application/json", responseBody)
+// 	if err != nil {
+// 		log.Fatalf("An Error Occured %v", err)
+// 	}
+// 	defer resp.Body.Close()
+
+// 	assert.Equalf(t, 201, resp.StatusCode, "create collection")
+
+// 	body, err := ioutil.ReadAll(resp.Body)
+// 	if err != nil {
+// 		log.Fatalln(err)
+// 	}
+
+// 	var collection_response responses.CollectionResponse
+// 	json.Unmarshal(body, &collection_response)
+
+//		assert.Equalf(t, "success", collection_response.Message, "create collection")
+//	}
 func TestGetCollection(t *testing.T) {
 	LoadCollection()
 	LoadItems()
