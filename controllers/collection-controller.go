@@ -191,43 +191,90 @@ func DeleteCollection(c *fiber.Ctx) error {
 // @Router /collections/{collectionId} [put]
 // @Success 200 {object} models.Collection
 func EditCollection(c *fiber.Ctx) error {
-
 	id := c.Params("collectionId")
 	if id == "" {
-		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
-			"message": "id cannot be empty",
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"message": "collection ID is required",
 		})
-		return nil
+	}
+
+	var collection models.StacCollection
+	if err := c.BodyParser(&collection); err != nil {
+		return c.Status(http.StatusUnprocessableEntity).JSON(fiber.Map{
+			"message": "failed to parse request body",
+		})
 	}
 
 	collectionModel := &models.Collection{}
-	collection := models.StacCollection{}
-
-	err := c.BodyParser(&collection)
-	if err != nil {
-		c.Status(http.StatusUnprocessableEntity).JSON(
-			&fiber.Map{"message": "request failed"})
-		return err
+	if err := database.DB.Db.Where("id = ?", id).First(collectionModel).Error; err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"message": "collection not found",
+		})
 	}
 
-	updated := models.Collection{
+	if err := database.DB.Db.Model(collectionModel).Where("id = ?", id).Updates(models.Collection{
 		Id:   id,
 		Data: models.JSONB{(&collection)},
-	}
-
-	err = database.DB.Db.Model(collectionModel).Where("id = ?", id).Updates(updated).Error
-	if err != nil {
-		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
-			"message": "could not update collection",
+	}).Error; err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"message": "failed to update collection",
 		})
-		return err
 	}
 
-	c.Status(http.StatusOK).JSON(&fiber.Map{
-		"message": "success",
+	return c.Status(http.StatusOK).JSON(fiber.Map{
+		"message": "collection updated successfully",
 	})
-	return nil
 }
+
+// // EditCollection godoc
+// // @Summary Edit a Collection
+// // @Description Edit a collection by ID
+// // @Tags Collections
+// // @ID edit-collection
+// // @Accept  json
+// // @Produce  json
+// // @Param collectionId path string true "Collection ID"
+// // @Param collection body models.Collection true "STAC Collection json"
+// // @Router /collections/{collectionId} [put]
+// // @Success 200 {object} models.Collection
+// func EditCollection(c *fiber.Ctx) error {
+
+// 	id := c.Params("collectionId")
+// 	if id == "" {
+// 		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
+// 			"message": "id cannot be empty",
+// 		})
+// 		return nil
+// 	}
+
+// 	collectionModel := &models.Collection{}
+// 	collection := models.StacCollection{}
+
+// 	err := c.BodyParser(&collection)
+// 	if err != nil {
+// 		c.Status(http.StatusUnprocessableEntity).JSON(
+// 			&fiber.Map{"message": "request failed"})
+// 		return err
+// 	}
+
+// 	updated := models.Collection{
+// 		Id:   id,
+// 		Data: models.JSONB{(&collection)},
+// 	}
+
+// 	err = database.DB.Db.Model(collectionModel).Where("id = ?", id).Updates(updated).Error
+// 	if err != nil {
+// 		c.Status(http.StatusBadRequest).JSON(&fiber.Map{
+// 			"message": "could not update collection",
+// 		})
+// 		return err
+// 	}
+
+// 	c.Status(http.StatusOK).JSON(&fiber.Map{
+// 		"message": "success",
+// 	})
+// 	return nil
+// }
 
 func Conformance(c *fiber.Ctx) error {
 	conformsTo := []string{
