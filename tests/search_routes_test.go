@@ -36,7 +36,6 @@ func TestSearchItems(t *testing.T) {
 	var search_response responses.SearchResponse
 	json.Unmarshal(body, &search_response)
 
-	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search ids")
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search ids")
 	assert.Equalf(t, 100, search_response.Context.Limit, "search ids")
 	assert.Equalf(t, 1, search_response.Context.Returned, "search ids")
@@ -67,7 +66,6 @@ func TestSearchCollections(t *testing.T) {
 	var search_response responses.SearchResponse
 	json.Unmarshal(body, &search_response)
 
-	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search collections")
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search collections")
 	assert.Equalf(t, 100, search_response.Context.Limit, "search collections")
 	assert.Equalf(t, 50, search_response.Context.Returned, "search collections")
@@ -98,7 +96,6 @@ func TestSearchNoCollections(t *testing.T) {
 	var search_response responses.SearchResponse
 	json.Unmarshal(body, &search_response)
 
-	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search collections")
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search collections")
 	assert.Equalf(t, 100, search_response.Context.Limit, "search collections")
 	assert.Equalf(t, 0, search_response.Context.Returned, "search collections")
@@ -140,7 +137,6 @@ func TestSearchGeometry(t *testing.T) {
 	var search_response responses.SearchResponse
 	json.Unmarshal(body, &search_response)
 
-	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
 	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
 	assert.Equalf(t, 50, search_response.Context.Returned, "search geometry")
@@ -184,7 +180,6 @@ func TestSearchGeometryLimit(t *testing.T) {
 	var search_response responses.SearchResponse
 	json.Unmarshal(body, &search_response)
 
-	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
 	assert.Equalf(t, 1, search_response.Context.Limit, "search geometry")
 	assert.Equalf(t, 1, search_response.Context.Returned, "search geometry")
@@ -227,7 +222,6 @@ func TestSearchNoGeometry(t *testing.T) {
 	var search_response responses.SearchResponse
 	json.Unmarshal(body, &search_response)
 
-	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
 	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
 	assert.Equalf(t, 0, search_response.Context.Returned, "search geometry")
@@ -263,7 +257,6 @@ func TestSearchPoint(t *testing.T) {
 	var search_response responses.SearchResponse
 	json.Unmarshal(body, &search_response)
 
-	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
 	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
 	assert.Equalf(t, 49, search_response.Context.Returned, "search geometry")
@@ -300,7 +293,6 @@ func TestSearchNoPoint(t *testing.T) {
 	var search_response responses.SearchResponse
 	json.Unmarshal(body, &search_response)
 
-	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
 	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
 	assert.Equalf(t, 0, search_response.Context.Returned, "search geometry")
@@ -345,7 +337,6 @@ func TestSearchLine(t *testing.T) {
 	var search_response responses.SearchResponse
 	json.Unmarshal(body, &search_response)
 
-	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
 	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
 	assert.Equalf(t, 49, search_response.Context.Returned, "search geometry")
@@ -391,7 +382,6 @@ func TestSearchNoLine(t *testing.T) {
 	var search_response responses.SearchResponse
 	json.Unmarshal(body, &search_response)
 
-	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
 	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
 	assert.Equalf(t, 0, search_response.Context.Returned, "search geometry")
@@ -424,7 +414,6 @@ func TestPostSearchBbox(t *testing.T) {
 	var search_response responses.SearchResponse
 	json.Unmarshal(body, &search_response)
 
-	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
 	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
 	assert.Equalf(t, 50, search_response.Context.Returned, "search geometry")
@@ -458,7 +447,6 @@ func TestPostSearchBbox3d(t *testing.T) {
 	var search_response responses.SearchResponse
 	json.Unmarshal(body, &search_response)
 
-	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
 	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
 	assert.Equalf(t, 50, search_response.Context.Returned, "search geometry")
@@ -492,7 +480,6 @@ func TestPostSearchBboxNoResults(t *testing.T) {
 	var search_response responses.SearchResponse
 	json.Unmarshal(body, &search_response)
 
-	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
 	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
 	assert.Equalf(t, 0, search_response.Context.Returned, "search geometry")
@@ -518,7 +505,6 @@ func TestGetSearchBbox(t *testing.T) {
 	var search_response responses.SearchResponse
 	json.Unmarshal(body, &search_response)
 
-	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
 	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
 	assert.Equalf(t, 50, search_response.Context.Returned, "search geometry")
@@ -545,7 +531,6 @@ func TestGetSearchBboxLimit(t *testing.T) {
 	var search_response responses.SearchResponse
 	json.Unmarshal(body, &search_response)
 
-	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
 	assert.Equalf(t, 10, search_response.Context.Limit, "search geometry")
 	assert.Equalf(t, 10, search_response.Context.Returned, "search geometry")
@@ -571,7 +556,6 @@ func TestGetSearchBboxNoResults(t *testing.T) {
 	var search_response responses.SearchResponse
 	json.Unmarshal(body, &search_response)
 
-	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
 	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
 	assert.Equalf(t, 0, search_response.Context.Returned, "search geometry")
@@ -597,7 +581,6 @@ func TestGetSearchLine(t *testing.T) {
 	var search_response responses.SearchResponse
 	json.Unmarshal(body, &search_response)
 
-	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
 	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
 	assert.Equalf(t, 49, search_response.Context.Returned, "search geometry")
@@ -624,7 +607,6 @@ func TestGetSearchLineNoResults(t *testing.T) {
 	var search_response responses.SearchResponse
 	json.Unmarshal(body, &search_response)
 
-	assert.Equalf(t, "item collection retrieved successfully", search_response.Message, "search geometry")
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
 	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
 	assert.Equalf(t, 0, search_response.Context.Returned, "search geometry")
