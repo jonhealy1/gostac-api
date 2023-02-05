@@ -249,21 +249,3 @@ func PostSearch(c *fiber.Ctx) error {
 
 	return nil
 }
-
-// buildSearchString takes a pointer to a Search struct and returns a string that is the ORDER BY
-// clause for a SQL query.
-func BuildSortString(searchString string, search models.Search) string {
-	var fieldStrings []string
-	for _, sort := range search.Sortby {
-		var field_string string
-		if strings.ContainsRune(sort.Field, '.') {
-			substrings := strings.Split(sort.Field, ".")
-			field_string = fmt.Sprintf("'%s' -> '%s'", substrings[0], substrings[1])
-		} else {
-			field_string = fmt.Sprintf("'%s'", sort.Field)
-		}
-		fieldStrings = append(fieldStrings, fmt.Sprintf("data -> %s %s", field_string, sort.Direction))
-	}
-	searchString += " ORDER BY " + strings.Join(fieldStrings, ", ")
-	return searchString
-}
