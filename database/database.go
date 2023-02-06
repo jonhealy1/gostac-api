@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"go-stac-api-postgres/models"
 	"log"
+	"os"
 
+	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -16,28 +18,28 @@ type Dbinstance struct {
 
 var DB Dbinstance
 
-// func getEnv(key string) string {
-// 	err := godotenv.Load()
-
-// 	if err != nil {
-// 		log.Fatalf("Error loading .env file")
-// 	}
-
-// 	return os.Getenv(key)
-// }
+func getEnv(key string) (string, error) {
+	err := godotenv.Load()
+	return os.Getenv(key), err
+}
 
 func ConnectDb() {
-	// host := getEnv("POSTGRES_HOST")
-	// port := getEnv("POSTGRES_PORT")
-	// user := getEnv("POSTGRES_USER")
-	// pass := getEnv("POSTGRES_PASS")
-	// dbname := getEnv("POSTGRES_DBNAME")
+	host, port, user, pass, dbname := "", "", "", "", ""
+	host, err := getEnv("POSTGRES_HOST")
 
-	host := "localhost"
-	port := "6002"
-	user := "username"
-	pass := "password"
-	dbname := "postgis"
+	// this is done for CI, not ideal ....
+	if err != nil {
+		host = "database"
+		port = "5433"
+		user = "username"
+		pass = "password"
+		dbname = "postgis"
+	} else {
+		port, _ = getEnv("POSTGRES_PORT")
+		user, _ = getEnv("POSTGRES_USER")
+		pass, _ = getEnv("POSTGRES_PASS")
+		dbname, _ = getEnv("POSTGRES_DBNAME")
+	}
 
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
