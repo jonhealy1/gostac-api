@@ -26,14 +26,20 @@ func TestCreateItem(t *testing.T) {
 	json.Unmarshal(byteValue, &expected_item)
 	responseBody := bytes.NewBuffer(byteValue)
 
-	resp, err := http.Post(
-		"http://localhost:6002/collections/sentinel-s2-l2a-cogs-test/items",
-		"application/json",
-		responseBody,
-	)
+	// Setup the app as it is done in the main function
+	app := Setup()
+
+	// Create a new HTTP request
+	req, _ := http.NewRequest("POST", "/collections/sentinel-s2-l2a-cogs-test/items", bytes.NewBuffer(responseBody.Bytes()))
+
+	// Set the Content-Type header to indicate the type of data in the request body
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		log.Fatalln(err)
 	}
+
 	defer resp.Body.Close()
 
 	assert.Equalf(t, 201, resp.StatusCode, "create item")
@@ -43,10 +49,10 @@ func TestCreateItem(t *testing.T) {
 		log.Fatalln(err)
 	}
 
-	var collection_response responses.CollectionResponse
-	json.Unmarshal(body, &collection_response)
+	var item_response responses.CollectionResponse
+	json.Unmarshal(body, &item_response)
 
-	assert.Equalf(t, "success", collection_response.Message, "create item")
+	assert.Equalf(t, "success", item_response.Message, "create item")
 }
 
 func TestCreateItemNoCollection(t *testing.T) {
@@ -60,14 +66,20 @@ func TestCreateItemNoCollection(t *testing.T) {
 	json.Unmarshal(byteValue, &expected_item)
 	responseBody := bytes.NewBuffer(byteValue)
 
-	resp, err := http.Post(
-		"http://localhost:6002/collections/sentinel-s2-l2a-cogs-test-x/items",
-		"application/json",
-		responseBody,
-	)
+	// Setup the app as it is done in the main function
+	app := Setup()
+
+	// Create a new HTTP request
+	req, _ := http.NewRequest("POST", "/collections/sentinel-s2-l2a-cogs-test-x/items", bytes.NewBuffer(responseBody.Bytes()))
+
+	// Set the Content-Type header to indicate the type of data in the request body
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		log.Fatalln(err)
 	}
+
 	defer resp.Body.Close()
 
 	assert.Equalf(t, 400, resp.StatusCode, "create item")
@@ -220,21 +232,20 @@ func TestEditItem(t *testing.T) {
 	json.Unmarshal(byteValue, &expected_item)
 	responseBody := bytes.NewBuffer(byteValue)
 
-	client := &http.Client{}
-	req, err := http.NewRequest(
-		http.MethodPut,
-		"http://localhost:6002/collections/sentinel-s2-l2a-cogs-test/items/S2B_1CCV_20181004_0_L2A-test",
-		responseBody,
-	)
-	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+	// Setup the app as it is done in the main function
+	app := Setup()
+
+	// Create a new HTTP request
+	req, _ := http.NewRequest(http.MethodPut, "/collections/sentinel-s2-l2a-cogs-test/items/S2B_1CCV_20181004_0_L2A-test", bytes.NewBuffer(responseBody.Bytes()))
+
+	// Set the Content-Type header to indicate the type of data in the request body
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		log.Fatalln(err)
 	}
 
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
-	}
 	defer resp.Body.Close()
 
 	assert.Equalf(t, "200 OK", resp.Status, "update item")
