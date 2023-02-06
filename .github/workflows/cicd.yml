@@ -17,6 +17,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Create environment file
+      run: |
+        echo POSTGRES_PASSWORD=${{ env.POSTGRES_PASSWORD }} > .env
+        
     - name: Start containers
       run: docker-compose -f "docker-compose.yml" up -d --build
 
@@ -28,3 +32,6 @@ jobs:
     - name: Test Go application
       run: |
         go test -v ./...
+
+    - name: Stop services with Docker Compose
+      run: docker-compose down
