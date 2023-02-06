@@ -37,6 +37,7 @@ func Setup() *fiber.App {
 
 	routes.CollectionRoute(app)
 	routes.ItemRoute(app)
+	routes.SearchRoute(app)
 
 	return app
 }
