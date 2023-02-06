@@ -12,6 +12,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    container: ubuntu
 
     steps:
     - name: Checkout code
