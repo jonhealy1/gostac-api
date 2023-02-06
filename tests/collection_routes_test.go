@@ -24,6 +24,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var api struct {
+	Url string
+}
+
 func Setup() *fiber.App {
 	database.ConnectDb()
 	app := fiber.New()
@@ -37,6 +41,11 @@ func Setup() *fiber.App {
 
 	routes.CollectionRoute(app)
 	routes.ItemRoute(app)
+
+	api.Url = os.Getenv("API_URL")
+	if api.Url == "" {
+		api.Url = "http://localhost:6002"
+	}
 
 	return app
 }
@@ -52,11 +61,19 @@ func TestCreateCollection(t *testing.T) {
 	json.Unmarshal(byteValue, &expected_collection)
 	responseBody := bytes.NewBuffer(byteValue)
 
-	resp, err := http.Post("http://localhost:6002/collections", "application/json", responseBody)
+	// Setup the app as it is done in the main function
+	app := Setup()
+
+	// Create a new HTTP request
+	req, _ := http.NewRequest("POST", "/collections", bytes.NewBuffer(responseBody.Bytes()))
+
+	// Set the Content-Type header to indicate the type of data in the request body
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		log.Fatalln(err)
 	}
-	defer resp.Body.Close()
 
 	assert.Equalf(t, 201, resp.StatusCode, "create collection")
 
