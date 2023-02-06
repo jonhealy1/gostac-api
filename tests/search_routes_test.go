@@ -424,7 +424,7 @@ func TestPostSearchBboxSort(t *testing.T) {
 	jsonBody := []byte(`{
 		"collections": ["sentinel-s2-l2a-cogs-test"],
 		"bbox": [97.504892,-75.254738,179.321298,-65.431580],
-		"sortby": [{"field": "id", "direction": "ASC"}]
+		"sortby": [{"field": "id", "direction": "DESC"}]
 	}`)
 	bodyReader := bytes.NewReader(jsonBody)
 
@@ -449,7 +449,40 @@ func TestPostSearchBboxSort(t *testing.T) {
 	json.Unmarshal(body, &search_response)
 
 	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
-	assert.Equal(t, "S2B_1CCV_20180914_0_L2A", search_response.Features[0].Id, "search sort")
+	assert.Equal(t, "S2B_1CCV_20201222_0_L2A", search_response.Features[0].Id, "search sort")
+	assert.Equalf(t, "sentinel-s2-l2a-cogs-test", search_response.Features[0].Collection, "search collections")
+}
+
+func TestPostSearchBboxSortDatetime(t *testing.T) {
+	jsonBody := []byte(`{
+		"collections": ["sentinel-s2-l2a-cogs-test"],
+		"bbox": [97.504892,-75.254738,179.321298,-65.431580],
+		"sortby": [{"field": "properties.datetime", "direction": "DESC"}]
+	}`)
+	bodyReader := bytes.NewReader(jsonBody)
+
+	resp, err := http.Post(
+		"http://localhost:6002/search",
+		"application/json",
+		bodyReader,
+	)
+	if err != nil {
+		log.Fatalf("An Error Occured %v", err)
+	}
+	defer resp.Body.Close()
+
+	assert.Equalf(t, 200, resp.StatusCode, "post sortby")
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	var search_response responses.SearchResponse
+	json.Unmarshal(body, &search_response)
+
+	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
+	assert.Equal(t, "S2B_1CCV_20201222_0_L2A", search_response.Features[0].Id, "search sort")
 	assert.Equalf(t, "sentinel-s2-l2a-cogs-test", search_response.Features[0].Collection, "search collections")
 }
 
