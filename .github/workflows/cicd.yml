@@ -13,25 +13,49 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: ghcr.io/stac-utils/pgstac:v0.6.6
+        env:
+          # must specify password for PG Docker container image, see: https://registry.hub.docker.com/_/postgres?tab=description&page=1&name=10
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: postgis
+          POSTGRES_USER: username
+          PGUSER: username
+          PGPASSWORD: password
+          PGHOST: localhost
+          PGDATABASE: postgis
+
+        ports:
+          - 5433:5432
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        command: postgres -N 500
+
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Create environment file
-      run: |
-        echo POSTGRES_USER=${{ env.POSTGRES_USE }} > .env
-        echo POSTGRES_PASS=${{ env.POSTGRES_PASS }} > .env
-        echo POSTGRES_DBNAME=${{ env.POSTGRES_DBNAME }} > .env
-        echo POSTGRES_HOST=${{ env.POSTGRES_HOST }} > .env
-        echo POSTGRES_PORT=${{ env.POSTGRES_PORT }} > .env
+    # - name: Create environment file
+    #   run: |
+    #     echo POSTGRES_USER=${{ env.POSTGRES_USE }} > .env
+    #     echo POSTGRES_PASS=${{ env.POSTGRES_PASS }} > .env
+    #     echo POSTGRES_DBNAME=${{ env.POSTGRES_DBNAME }} > .env
+    #     echo POSTGRES_HOST=${{ env.POSTGRES_HOST }} > .env
+    #     echo POSTGRES_PORT=${{ env.POSTGRES_PORT }} > .env
 
-    - name: Start containers
-      run: docker-compose -f "docker-compose.yml" up -d --build
+    # - name: Start containers
+    #   run: docker-compose up database
 
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
         go-version: 1.15.x
+
+    - name: Run goapistac
+      run: |
+        go run app.go
 
     - name: Test Go application
       run: |
