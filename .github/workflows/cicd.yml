@@ -9,12 +9,9 @@ on:
       - main
       - features/**
 
-env:
-  GO111MODULE: on
-
 jobs:
   test:
-    runs-on: alpine-latest
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
@@ -23,11 +20,8 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: latest
+        go-version: 1.15.x
 
-    - name: Install build dependencies
-      run: |
-        apk add --no-cache make git
-    - name: Test the application
+    - name: Test Go application
       run: |
         go test -v ./...
