@@ -22,10 +22,8 @@ jobs:
       with:
         compose-version: 1.27.4
 
-    - name: Start services with Docker Compose
-      run: |
-        # export POSTGRES_PASSWORD=${{ env.POSTGRES_PASSWORD }}
-        docker-compose up -d
+    - name: Start containers
+      run: docker-compose -f "docker-compose.yml" up -d --build
 
     - name: Set up Go
       uses: actions/setup-go@v2
