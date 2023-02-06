@@ -35,7 +35,7 @@ jobs:
 
     - name: Test Go application
       run: |
-        go test -v ./...
+        godotenv -f .env-example go test ./...
 
     - name: Stop services with Docker Compose
       run: docker-compose down
