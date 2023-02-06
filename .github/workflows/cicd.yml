@@ -17,7 +17,6 @@ jobs:
       postgres:
         image: postgis/postgis:10-2.5
         env:
-          # must specify password for PG Docker container image, see: https://registry.hub.docker.com/_/postgres?tab=description&page=1&name=10
           POSTGRES_PASSWORD: password
           POSTGRES_DB: postgis
           POSTGRES_USER: username
@@ -28,25 +27,11 @@ jobs:
 
         ports:
           - 5433:5432
-        # needed because the postgres container does not provide a healthcheck
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-        command: postgres -N 500
-
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-
-    # - name: Create environment file
-    #   run: |
-    #     echo POSTGRES_USER=${{ env.POSTGRES_USE }} > .env
-    #     echo POSTGRES_PASS=${{ env.POSTGRES_PASS }} > .env
-    #     echo POSTGRES_DBNAME=${{ env.POSTGRES_DBNAME }} > .env
-    #     echo POSTGRES_HOST=${{ env.POSTGRES_HOST }} > .env
-    #     echo POSTGRES_PORT=${{ env.POSTGRES_PORT }} > .env
-
-    # - name: Start containers
-    #   run: docker-compose up database
 
     - name: Set up Go
       uses: actions/setup-go@v2
