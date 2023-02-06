@@ -24,10 +24,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var api struct {
-	Url string
-}
-
 func Setup() *fiber.App {
 	database.ConnectDb()
 	app := fiber.New()
@@ -41,11 +37,6 @@ func Setup() *fiber.App {
 
 	routes.CollectionRoute(app)
 	routes.ItemRoute(app)
-
-	api.Url = os.Getenv("API_URL")
-	if api.Url == "" {
-		api.Url = "http://localhost:6002"
-	}
 
 	return app
 }
@@ -225,10 +216,13 @@ func TestEditCollection(t *testing.T) {
 
 	jsonReq, err := json.Marshal(expected_collection)
 
-	client := &http.Client{}
+	// Setup the app as it is done in the main function
+	app := Setup()
+
+	//client := &http.Client{}
 	req, err := http.NewRequest(
 		http.MethodPut,
-		"http://localhost:6002/collections/sentinel-s2-l2a-cogs-test-2",
+		"/collections/sentinel-s2-l2a-cogs-test-2",
 		bytes.NewBuffer(jsonReq),
 	)
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
@@ -236,7 +230,11 @@ func TestEditCollection(t *testing.T) {
 		log.Fatalf("An Error Occured %v", err)
 	}
 
-	resp, err := client.Do(req)
+	// Perform the request plain with the app.
+	// The -1 disables request latency.
+	resp, err := app.Test(req, -1)
+
+	// resp, err := client.Do(req)
 	if err != nil {
 		log.Fatalf("An Error Occured %v", err)
 	}
