@@ -16,30 +16,50 @@ func TestSearchItems(t *testing.T) {
 	jsonBody := []byte(`{"ids": ["S2B_1CCV_20181004_0_L2A"]}`)
 	bodyReader := bytes.NewReader(jsonBody)
 
-	resp, err := http.Post(
-		"http://localhost:6002/search",
-		"application/json",
-		bodyReader,
-	)
+	app := Setup()
+	req, _ := http.NewRequest("POST", "/search", bodyReader)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 	defer resp.Body.Close()
 
-	assert.Equalf(t, 200, resp.StatusCode, "create item")
+	if resp.StatusCode != 200 {
+		t.Fatalf("Expected status code 200, but got %d", resp.StatusCode)
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 
-	var search_response responses.SearchResponse
-	json.Unmarshal(body, &search_response)
+	var searchResponse responses.SearchResponse
+	err = json.Unmarshal(body, &searchResponse)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
 
-	assert.Equalf(t, "FeatureCollection", search_response.Type, "search ids")
-	assert.Equalf(t, 100, search_response.Context.Limit, "search ids")
-	assert.Equalf(t, 1, search_response.Context.Returned, "search ids")
-	assert.Equalf(t, "S2B_1CCV_20181004_0_L2A", search_response.Features[0].Id, "search ids")
+	expectedType := "FeatureCollection"
+	if searchResponse.Type != expectedType {
+		t.Errorf("Expected type %s, but got %s", expectedType, searchResponse.Type)
+	}
+
+	expectedLimit := 100
+	if searchResponse.Context.Limit != expectedLimit {
+		t.Errorf("Expected limit %d, but got %d", expectedLimit, searchResponse.Context.Limit)
+	}
+
+	expectedReturned := 1
+	if searchResponse.Context.Returned != expectedReturned {
+		t.Errorf("Expected returned %d, but got %d", expectedReturned, searchResponse.Context.Returned)
+	}
+
+	expectedId := "S2B_1CCV_20181004_0_L2A"
+	if searchResponse.Features[0].Id != expectedId {
+		t.Errorf("Expected id %s, but got %s", expectedId, searchResponse.Features[0].Id)
+	}
 }
 
 func TestSearchCollections(t *testing.T) {
