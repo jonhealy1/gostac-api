@@ -31,7 +31,7 @@ jobs:
 
       goapistac:
         image: golang:1.15
-        command: go run app.go
+        command: ["go run app.go"]
 
     steps:
     - name: Checkout code
