@@ -35,7 +35,7 @@ jobs:
 
     - name: Test Go application
       run: |
-        go install github.com/joho/godotenv/cmd/godotenv@latest
+        go get github.com/joho/godotenv/cmd/godotenv@latest
         godotenv -f .env-example go test ./...
 
     - name: Stop services with Docker Compose
