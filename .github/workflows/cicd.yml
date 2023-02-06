@@ -17,6 +17,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Set up Docker Compose
+      uses: docker/setup-compose@v1
+      with:
+        compose-version: 1.27.4
+
+    - name: Start services with Docker Compose
+      run: |
+        # export POSTGRES_PASSWORD=${{ env.POSTGRES_PASSWORD }}
+        docker-compose up -d
+
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
