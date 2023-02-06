@@ -17,11 +17,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up Docker Compose
-      uses: docker/setup-compose@v1
-      with:
-        compose-version: 1.27.4
-
     - name: Start containers
       run: docker-compose -f "docker-compose.yml" up -d --build
 
