@@ -215,9 +215,6 @@ func GetItem(c *fiber.Ctx) error {
 		return nil
 	}
 
-	// var results []map[string]interface{}
-	// database.DB.Db.Table("items").Find(&results)
-
 	result := &models.Item{}
 	database.DB.Db.Table("items").Where("id = ? AND collection = ?", item_id, collection_id).Find(&result)
 
@@ -245,60 +242,6 @@ func GetItem(c *fiber.Ctx) error {
 	}
 	return nil
 }
-
-// GetItemCollection godoc
-// @Summary Get all Items from a Collection
-// @Description Get all Items with a Collection ID
-// @Tags ItemCollection
-// @ID get-item-collection
-// @Accept  json
-// @Produce  json
-// @Param collectionId path string true "Collection ID"
-// @Router /collections/{collectionId}/items [get]
-// @Success 200 {object} models.ItemCollection
-// func GetItemCollection(c *fiber.Ctx) error {
-// 	var items []models.Item
-// 	collection_id := c.Params("collectionId")
-
-// 	if collection_id == "" {
-// 		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
-// 			"message": "id cannot be empty",
-// 		})
-// 		return nil
-// 	}
-
-// 	limit := 100
-
-// 	err := database.DB.Db.Where("collection = ?", collection_id).Find(&items).Error
-
-// 	if err != nil {
-// 		c.Status(http.StatusBadRequest).JSON(
-// 			&fiber.Map{"message": "could not get collections"})
-// 		return err
-// 	}
-
-// 	context := models.Context{
-// 		Returned: len(items),
-// 		Limit:    limit,
-// 	}
-
-// 	var stac_items []interface{}
-// 	for _, a_item := range items {
-// 		var itemMap map[string]interface{}
-// 		json.Unmarshal([]byte(a_item.Data), &itemMap)
-// 		stac_items = append(stac_items, itemMap)
-// 	}
-
-// 	c.Status(http.StatusOK).JSON(&fiber.Map{
-// 		"message":    "item collection retrieved successfully",
-// 		"collection": collection_id,
-// 		"context":    context,
-// 		"type":       "FeatureCollection",
-// 		"features":   stac_items,
-// 	})
-
-// 	return nil
-// }
 
 // GetItemCollection godoc
 // @Summary Get all Items from a Collection
