@@ -11,21 +11,21 @@ on:
 
 jobs:
   services:
-  postgres:
-    image: postgis/postgis:10-2.5
-    env:
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: postgis
-      POSTGRES_USER: username
-      PGUSER: username
-      PGPASSWORD: password
-      PGHOST: localhost
-      PGDATABASE: postgis
+    postgres:
+      image: postgis/postgis:10-2.5
+      env:
+        POSTGRES_PASSWORD: password
+        POSTGRES_DB: postgis
+        POSTGRES_USER: username
+        PGUSER: username
+        PGPASSWORD: password
+        PGHOST: localhost
+        PGDATABASE: postgis
 
-    ports:
-      - 5433:5432
-    options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-    
+      ports:
+        - 5433:5432
+      options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
   test:
     runs-on: ubuntu-latest
 
