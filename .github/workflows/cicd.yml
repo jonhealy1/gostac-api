@@ -12,7 +12,7 @@ on:
 jobs:
   services:
     postgres:
-      image: postgis/postgis:10-2.5
+      uses: postgis/postgis:10-2.5
       env:
         POSTGRES_PASSWORD: password
         POSTGRES_DB: postgis
