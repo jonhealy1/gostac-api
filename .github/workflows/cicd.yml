@@ -23,12 +23,6 @@ jobs:
         go-version: 1.15.x
 
 services:
-  goapistac:
-    image: golang:1.15
-    ports:
-      - 6002:6002
-    command: "go run app.go"
-
   postgres:
     image: postgis/postgis:10-2.5
     env:
@@ -56,6 +50,10 @@ jobs:
       uses: actions/setup-go@v2
       with:
         go-version: 1.15.x
+
+    - name: Run api server
+      run: |
+        nohup go run app.go &
 
     - name: Test Go application
       run: |
