@@ -13,22 +13,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgis/postgis:10-2.5
-        env:
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: postgis
-          POSTGRES_USER: username
-          PGUSER: username
-          PGPASSWORD: password
-          PGHOST: localhost
-          PGDATABASE: postgis
-
-        ports:
-          - 5433:5432
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -41,9 +25,24 @@ jobs:
 services:
   goapistac:
     image: golang:1.15
-    ports;
+    ports:
       - 6002:6002
-    command: ["go run app.go"]
+    command: "go run app.go"
+
+  postgres:
+    image: postgis/postgis:10-2.5
+    env:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgis
+      POSTGRES_USER: username
+      PGUSER: username
+      PGPASSWORD: password
+      PGHOST: localhost
+      PGDATABASE: postgis
+
+    ports:
+      - 5433:5432
+    options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
 jobs:
   test:
@@ -57,7 +56,7 @@ jobs:
       uses: actions/setup-go@v2
       with:
         go-version: 1.15.x
-        
+
     - name: Test Go application
       run: |
         go get github.com/joho/godotenv/cmd/godotenv@latest
