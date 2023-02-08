@@ -37,6 +37,7 @@ func Setup() *fiber.App {
 
 	routes.CollectionRoute(app)
 	routes.ItemRoute(app)
+	routes.SearchRoute(app)
 
 	return app
 }
@@ -52,11 +53,19 @@ func TestCreateCollection(t *testing.T) {
 	json.Unmarshal(byteValue, &expected_collection)
 	responseBody := bytes.NewBuffer(byteValue)
 
-	resp, err := http.Post("http://localhost:6002/collections", "application/json", responseBody)
+	// Setup the app as it is done in the main function
+	app := Setup()
+
+	// Create a new HTTP request
+	req, _ := http.NewRequest("POST", "/collections", bytes.NewBuffer(responseBody.Bytes()))
+
+	// Set the Content-Type header to indicate the type of data in the request body
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		log.Fatalln(err)
 	}
-	defer resp.Body.Close()
 
 	assert.Equalf(t, 201, resp.StatusCode, "create collection")
 
@@ -208,10 +217,13 @@ func TestEditCollection(t *testing.T) {
 
 	jsonReq, err := json.Marshal(expected_collection)
 
-	client := &http.Client{}
+	// Setup the app as it is done in the main function
+	app := Setup()
+
+	//client := &http.Client{}
 	req, err := http.NewRequest(
 		http.MethodPut,
-		"http://localhost:6002/collections/sentinel-s2-l2a-cogs-test-2",
+		"/collections/sentinel-s2-l2a-cogs-test-2",
 		bytes.NewBuffer(jsonReq),
 	)
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
@@ -219,7 +231,11 @@ func TestEditCollection(t *testing.T) {
 		log.Fatalf("An Error Occured %v", err)
 	}
 
-	resp, err := client.Do(req)
+	// Perform the request plain with the app.
+	// The -1 disables request latency.
+	resp, err := app.Test(req, -1)
+
+	// resp, err := client.Do(req)
 	if err != nil {
 		log.Fatalf("An Error Occured %v", err)
 	}

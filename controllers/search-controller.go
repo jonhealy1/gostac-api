@@ -78,6 +78,8 @@ func GetSearch(c *fiber.Ctx) error {
 
 	searchString := sQLString(searchMap)
 
+	searchString += fmt.Sprintf("LIMIT %d", limit)
+
 	if searchMap.Geometry == 1 {
 		if bboxString != "" {
 			bbox := strings.Split(bboxString, ",")
@@ -169,6 +171,12 @@ func PostSearch(c *fiber.Ctx) error {
 	}
 	searchString := sQLString(searchMap)
 
+	if len(search.Sortby) > 0 {
+		searchString = BuildSortString(searchString, search)
+	}
+
+	searchString += fmt.Sprintf(" LIMIT %d", limit)
+
 	if searchMap.Geometry == 1 {
 		geoString := ""
 		if len(bbox) == 4 {
@@ -190,11 +198,11 @@ func PostSearch(c *fiber.Ctx) error {
 		encodedString := toWKT(geoString)
 
 		if searchMap.Collections == 1 && searchMap.Ids == 1 {
-			database.DB.Db.Raw(searchString, encodedString, search.Collections, search.Ids, limit).Scan(&items)
+			database.DB.Db.Raw(searchString, encodedString, search.Collections, search.Ids).Scan(&items)
 		} else if searchMap.Ids == 1 {
-			database.DB.Db.Raw(searchString, encodedString, search.Ids, limit).Scan(&items)
+			database.DB.Db.Raw(searchString, encodedString, search.Ids).Scan(&items)
 		} else if searchMap.Collections == 1 {
-			database.DB.Db.Raw(searchString, encodedString, search.Collections, limit).Scan(&items)
+			database.DB.Db.Raw(searchString, encodedString, search.Collections).Scan(&items)
 		} else {
 			database.DB.Db.Raw(searchString, encodedString, limit).Scan(&items)
 		}

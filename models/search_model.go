@@ -11,12 +11,18 @@ type Search struct {
 	Bbox               []float64                 `json:"bbox,omitempty"`
 	Geometry           GeoJSONGenericGeometry    `json:"geometry,omitempty"`
 	GeometryCollection GeoJSONGeometryCollection `json:"geometrycollection,omitempty"`
+	Sortby             []Sort                    `json:"sortby,omitempty"`
 }
 
 type SearchMap struct {
 	Collections int
 	Ids         int
 	Geometry    int
+}
+
+type Sort struct {
+	Field     string `json:"field"`
+	Direction string `json:"direction"`
 }
 
 type GeoJSONGeometryCollection struct {

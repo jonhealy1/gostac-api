@@ -6,11 +6,10 @@ import (
 	"log"
 	"os"
 
+	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-
-	"github.com/joho/godotenv"
 )
 
 type Dbinstance struct {
@@ -19,26 +18,32 @@ type Dbinstance struct {
 
 var DB Dbinstance
 
-func getEnv(key string) string {
+func getEnv(key string) (string, error) {
 	err := godotenv.Load()
-
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
-
-	return os.Getenv(key)
+	return os.Getenv(key), err
 }
 
 func ConnectDb() {
-	host := getEnv("POSTGRES_HOST")
-	port := getEnv("POSTGRES_PORT")
-	user := getEnv("POSTGRES_USER")
-	pass := getEnv("POSTGRES_PASS")
-	dbname := getEnv("POSTGRES_DBNAME")
+	host, port, user, pass, dbname := "", "", "", "", ""
+	host, err := getEnv("POSTGRES_HOST")
+
+	// this is done for CI, not ideal ....
+	if err != nil {
+		host = "localhost"
+		port = "5433"
+		user = "username"
+		pass = "password"
+		dbname = "postgis"
+	} else {
+		port, _ = getEnv("POSTGRES_PORT")
+		user, _ = getEnv("POSTGRES_USER")
+		pass, _ = getEnv("POSTGRES_PASS")
+		dbname, _ = getEnv("POSTGRES_DBNAME")
+	}
 
 	dsn := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		host, port, user, pass, dbname, "disable",
+		"host=%s port=%s user=%s password=%s dbname=%s",
+		host, port, user, pass, dbname,
 	)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{

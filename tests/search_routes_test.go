@@ -5,100 +5,153 @@ import (
 	"encoding/json"
 	"go-stac-api-postgres/responses"
 	"io/ioutil"
-	"log"
 	"net/http"
+	"net/url"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestSearchItems(t *testing.T) {
 	jsonBody := []byte(`{"ids": ["S2B_1CCV_20181004_0_L2A"]}`)
 	bodyReader := bytes.NewReader(jsonBody)
 
-	resp, err := http.Post(
-		"http://localhost:6002/search",
-		"application/json",
-		bodyReader,
-	)
+	app := Setup()
+	req, _ := http.NewRequest("POST", "/search", bodyReader)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 	defer resp.Body.Close()
 
-	assert.Equalf(t, 200, resp.StatusCode, "create item")
+	if resp.StatusCode != 200 {
+		t.Fatalf("Expected status code 200, but got %d", resp.StatusCode)
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 
-	var search_response responses.SearchResponse
-	json.Unmarshal(body, &search_response)
+	var searchResponse responses.SearchResponse
+	err = json.Unmarshal(body, &searchResponse)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
 
-	assert.Equalf(t, "FeatureCollection", search_response.Type, "search ids")
-	assert.Equalf(t, 100, search_response.Context.Limit, "search ids")
-	assert.Equalf(t, 1, search_response.Context.Returned, "search ids")
-	assert.Equalf(t, "S2B_1CCV_20181004_0_L2A", search_response.Features[0].Id, "search ids")
+	expectedType := "FeatureCollection"
+	if searchResponse.Type != expectedType {
+		t.Errorf("Expected type %s, but got %s", expectedType, searchResponse.Type)
+	}
+
+	expectedLimit := 100
+	if searchResponse.Context.Limit != expectedLimit {
+		t.Errorf("Expected limit %d, but got %d", expectedLimit, searchResponse.Context.Limit)
+	}
+
+	expectedReturned := 1
+	if searchResponse.Context.Returned != expectedReturned {
+		t.Errorf("Expected returned %d, but got %d", expectedReturned, searchResponse.Context.Returned)
+	}
+
+	expectedId := "S2B_1CCV_20181004_0_L2A"
+	if searchResponse.Features[0].Id != expectedId {
+		t.Errorf("Expected id %s, but got %s", expectedId, searchResponse.Features[0].Id)
+	}
 }
 
 func TestSearchCollections(t *testing.T) {
 	jsonBody := []byte(`{"collections": ["sentinel-s2-l2a-cogs-test"]}`)
 	bodyReader := bytes.NewReader(jsonBody)
 
-	resp, err := http.Post(
-		"http://localhost:6002/search",
-		"application/json",
-		bodyReader,
-	)
+	app := Setup()
+	req, _ := http.NewRequest("POST", "/search", bodyReader)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 	defer resp.Body.Close()
 
-	assert.Equalf(t, 200, resp.StatusCode, "create item")
+	if resp.StatusCode != 200 {
+		t.Fatalf("Expected status code 200, but got %d", resp.StatusCode)
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 
-	var search_response responses.SearchResponse
-	json.Unmarshal(body, &search_response)
+	var searchResponse responses.SearchResponse
+	err = json.Unmarshal(body, &searchResponse)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
 
-	assert.Equalf(t, "FeatureCollection", search_response.Type, "search collections")
-	assert.Equalf(t, 100, search_response.Context.Limit, "search collections")
-	assert.Equalf(t, 50, search_response.Context.Returned, "search collections")
-	assert.Equalf(t, "sentinel-s2-l2a-cogs-test", search_response.Features[0].Collection, "search collections")
+	expectedType := "FeatureCollection"
+	if searchResponse.Type != expectedType {
+		t.Errorf("Expected type %s, but got %s", expectedType, searchResponse.Type)
+	}
+
+	expectedLimit := 100
+	if searchResponse.Context.Limit != expectedLimit {
+		t.Errorf("Expected limit %d, but got %d", expectedLimit, searchResponse.Context.Limit)
+	}
+
+	expectedReturned := 50
+	if searchResponse.Context.Returned != expectedReturned {
+		t.Errorf("Expected returned %d, but got %d", expectedReturned, searchResponse.Context.Returned)
+	}
+	expectedId := "sentinel-s2-l2a-cogs-test"
+	if searchResponse.Features[0].Collection != expectedId {
+		t.Errorf("Expected id %s, but got %s", expectedId, searchResponse.Features[0].Id)
+	}
 }
 
 func TestSearchNoCollections(t *testing.T) {
 	jsonBody := []byte(`{"collections": ["sentinel-s2-l2a-cogs-test-test"]}`)
 	bodyReader := bytes.NewReader(jsonBody)
 
-	resp, err := http.Post(
-		"http://localhost:6002/search",
-		"application/json",
-		bodyReader,
-	)
+	app := Setup()
+	req, _ := http.NewRequest("POST", "/search", bodyReader)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 	defer resp.Body.Close()
 
-	assert.Equalf(t, 200, resp.StatusCode, "create item")
+	if resp.StatusCode != 200 {
+		t.Fatalf("Expected status code 200, but got %d", resp.StatusCode)
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 
-	var search_response responses.SearchResponse
-	json.Unmarshal(body, &search_response)
+	var searchResponse responses.SearchResponse
+	err = json.Unmarshal(body, &searchResponse)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
 
-	assert.Equalf(t, "FeatureCollection", search_response.Type, "search collections")
-	assert.Equalf(t, 100, search_response.Context.Limit, "search collections")
-	assert.Equalf(t, 0, search_response.Context.Returned, "search collections")
+	expectedType := "FeatureCollection"
+	if searchResponse.Type != expectedType {
+		t.Errorf("Expected type %s, but got %s", expectedType, searchResponse.Type)
+	}
+
+	expectedLimit := 100
+	if searchResponse.Context.Limit != expectedLimit {
+		t.Errorf("Expected limit %d, but got %d", expectedLimit, searchResponse.Context.Limit)
+	}
+
+	expectedReturned := 0
+	if searchResponse.Context.Returned != expectedReturned {
+		t.Errorf("Expected returned %d, but got %d", expectedReturned, searchResponse.Context.Returned)
+	}
 }
 
 func TestSearchGeometry(t *testing.T) {
@@ -117,30 +170,50 @@ func TestSearchGeometry(t *testing.T) {
 	}`)
 	bodyReader := bytes.NewReader(jsonBody)
 
-	resp, err := http.Post(
-		"http://localhost:6002/search",
-		"application/json",
-		bodyReader,
-	)
+	app := Setup()
+	req, _ := http.NewRequest("POST", "/search", bodyReader)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 	defer resp.Body.Close()
 
-	assert.Equalf(t, 200, resp.StatusCode, "create item")
+	if resp.StatusCode != 200 {
+		t.Fatalf("Expected status code 200, but got %d", resp.StatusCode)
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 
-	var search_response responses.SearchResponse
-	json.Unmarshal(body, &search_response)
+	var searchResponse responses.SearchResponse
+	err = json.Unmarshal(body, &searchResponse)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
 
-	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
-	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
-	assert.Equalf(t, 50, search_response.Context.Returned, "search geometry")
-	assert.Equalf(t, "sentinel-s2-l2a-cogs-test", search_response.Features[0].Collection, "search collections")
+	expectedType := "FeatureCollection"
+	if searchResponse.Type != expectedType {
+		t.Errorf("Expected type %s, but got %s", expectedType, searchResponse.Type)
+	}
+
+	expectedLimit := 100
+	if searchResponse.Context.Limit != expectedLimit {
+		t.Errorf("Expected limit %d, but got %d", expectedLimit, searchResponse.Context.Limit)
+	}
+
+	expectedReturned := 50
+	if searchResponse.Context.Returned != expectedReturned {
+		t.Errorf("Expected returned %d, but got %d", expectedReturned, searchResponse.Context.Returned)
+	}
+
+	expectedId := "sentinel-s2-l2a-cogs-test"
+	if searchResponse.Features[0].Collection != expectedId {
+		t.Errorf("Expected id %s, but got %s", expectedId, searchResponse.Features[0].Id)
+	}
 }
 
 func TestSearchGeometryLimit(t *testing.T) {
@@ -160,30 +233,50 @@ func TestSearchGeometryLimit(t *testing.T) {
 	}`)
 	bodyReader := bytes.NewReader(jsonBody)
 
-	resp, err := http.Post(
-		"http://localhost:6002/search",
-		"application/json",
-		bodyReader,
-	)
+	app := Setup()
+	req, _ := http.NewRequest("POST", "/search", bodyReader)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 	defer resp.Body.Close()
 
-	assert.Equalf(t, 200, resp.StatusCode, "create item")
+	if resp.StatusCode != 200 {
+		t.Fatalf("Expected status code 200, but got %d", resp.StatusCode)
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 
-	var search_response responses.SearchResponse
-	json.Unmarshal(body, &search_response)
+	var searchResponse responses.SearchResponse
+	err = json.Unmarshal(body, &searchResponse)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
 
-	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
-	assert.Equalf(t, 1, search_response.Context.Limit, "search geometry")
-	assert.Equalf(t, 1, search_response.Context.Returned, "search geometry")
-	assert.Equalf(t, "sentinel-s2-l2a-cogs-test", search_response.Features[0].Collection, "search collections")
+	expectedType := "FeatureCollection"
+	if searchResponse.Type != expectedType {
+		t.Errorf("Expected type %s, but got %s", expectedType, searchResponse.Type)
+	}
+
+	expectedLimit := 1
+	if searchResponse.Context.Limit != expectedLimit {
+		t.Errorf("Expected limit %d, but got %d", expectedLimit, searchResponse.Context.Limit)
+	}
+
+	expectedReturned := 1
+	if searchResponse.Context.Returned != expectedReturned {
+		t.Errorf("Expected returned %d, but got %d", expectedReturned, searchResponse.Context.Returned)
+	}
+
+	expectedId := "sentinel-s2-l2a-cogs-test"
+	if searchResponse.Features[0].Collection != expectedId {
+		t.Errorf("Expected id %s, but got %s", expectedId, searchResponse.Features[0].Id)
+	}
 }
 
 func TestSearchNoGeometry(t *testing.T) {
@@ -202,29 +295,45 @@ func TestSearchNoGeometry(t *testing.T) {
 	}`)
 	bodyReader := bytes.NewReader(jsonBody)
 
-	resp, err := http.Post(
-		"http://localhost:6002/search",
-		"application/json",
-		bodyReader,
-	)
+	app := Setup()
+	req, _ := http.NewRequest("POST", "/search", bodyReader)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 	defer resp.Body.Close()
 
-	assert.Equalf(t, 200, resp.StatusCode, "create item")
+	if resp.StatusCode != 200 {
+		t.Fatalf("Expected status code 200, but got %d", resp.StatusCode)
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 
-	var search_response responses.SearchResponse
-	json.Unmarshal(body, &search_response)
+	var searchResponse responses.SearchResponse
+	err = json.Unmarshal(body, &searchResponse)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
 
-	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
-	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
-	assert.Equalf(t, 0, search_response.Context.Returned, "search geometry")
+	expectedType := "FeatureCollection"
+	if searchResponse.Type != expectedType {
+		t.Errorf("Expected type %s, but got %s", expectedType, searchResponse.Type)
+	}
+
+	expectedLimit := 100
+	if searchResponse.Context.Limit != expectedLimit {
+		t.Errorf("Expected limit %d, but got %d", expectedLimit, searchResponse.Context.Limit)
+	}
+
+	expectedReturned := 0
+	if searchResponse.Context.Returned != expectedReturned {
+		t.Errorf("Expected returned %d, but got %d", expectedReturned, searchResponse.Context.Returned)
+	}
 }
 
 func TestSearchPoint(t *testing.T) {
@@ -237,30 +346,50 @@ func TestSearchPoint(t *testing.T) {
 	}`)
 	bodyReader := bytes.NewReader(jsonBody)
 
-	resp, err := http.Post(
-		"http://localhost:6002/search",
-		"application/json",
-		bodyReader,
-	)
+	app := Setup()
+	req, _ := http.NewRequest("POST", "/search", bodyReader)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 	defer resp.Body.Close()
 
-	assert.Equalf(t, 200, resp.StatusCode, "create item")
+	if resp.StatusCode != 200 {
+		t.Fatalf("Expected status code 200, but got %d", resp.StatusCode)
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 
-	var search_response responses.SearchResponse
-	json.Unmarshal(body, &search_response)
+	var searchResponse responses.SearchResponse
+	err = json.Unmarshal(body, &searchResponse)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
 
-	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
-	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
-	assert.Equalf(t, 49, search_response.Context.Returned, "search geometry")
-	assert.Equalf(t, "sentinel-s2-l2a-cogs-test", search_response.Features[0].Collection, "search collections")
+	expectedType := "FeatureCollection"
+	if searchResponse.Type != expectedType {
+		t.Errorf("Expected type %s, but got %s", expectedType, searchResponse.Type)
+	}
+
+	expectedLimit := 100
+	if searchResponse.Context.Limit != expectedLimit {
+		t.Errorf("Expected limit %d, but got %d", expectedLimit, searchResponse.Context.Limit)
+	}
+
+	expectedReturned := 49
+	if searchResponse.Context.Returned != expectedReturned {
+		t.Errorf("Expected returned %d, but got %d", expectedReturned, searchResponse.Context.Returned)
+	}
+
+	expectedId := "sentinel-s2-l2a-cogs-test"
+	if searchResponse.Features[0].Collection != expectedId {
+		t.Errorf("Expected id %s, but got %s", expectedId, searchResponse.Features[0].Id)
+	}
 }
 
 func TestSearchNoPoint(t *testing.T) {
@@ -273,29 +402,45 @@ func TestSearchNoPoint(t *testing.T) {
 	}`)
 	bodyReader := bytes.NewReader(jsonBody)
 
-	resp, err := http.Post(
-		"http://localhost:6002/search",
-		"application/json",
-		bodyReader,
-	)
+	app := Setup()
+	req, _ := http.NewRequest("POST", "/search", bodyReader)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 	defer resp.Body.Close()
 
-	assert.Equalf(t, 200, resp.StatusCode, "create item")
+	if resp.StatusCode != 200 {
+		t.Fatalf("Expected status code 200, but got %d", resp.StatusCode)
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 
-	var search_response responses.SearchResponse
-	json.Unmarshal(body, &search_response)
+	var searchResponse responses.SearchResponse
+	err = json.Unmarshal(body, &searchResponse)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
 
-	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
-	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
-	assert.Equalf(t, 0, search_response.Context.Returned, "search geometry")
+	expectedType := "FeatureCollection"
+	if searchResponse.Type != expectedType {
+		t.Errorf("Expected type %s, but got %s", expectedType, searchResponse.Type)
+	}
+
+	expectedLimit := 100
+	if searchResponse.Context.Limit != expectedLimit {
+		t.Errorf("Expected limit %d, but got %d", expectedLimit, searchResponse.Context.Limit)
+	}
+
+	expectedReturned := 0
+	if searchResponse.Context.Returned != expectedReturned {
+		t.Errorf("Expected returned %d, but got %d", expectedReturned, searchResponse.Context.Returned)
+	}
 }
 
 func TestSearchLine(t *testing.T) {
@@ -317,30 +462,50 @@ func TestSearchLine(t *testing.T) {
 	}`)
 	bodyReader := bytes.NewReader(jsonBody)
 
-	resp, err := http.Post(
-		"http://localhost:6002/search",
-		"application/json",
-		bodyReader,
-	)
+	app := Setup()
+	req, _ := http.NewRequest("POST", "/search", bodyReader)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 	defer resp.Body.Close()
 
-	assert.Equalf(t, 200, resp.StatusCode, "create item")
+	if resp.StatusCode != 200 {
+		t.Fatalf("Expected status code 200, but got %d", resp.StatusCode)
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 
-	var search_response responses.SearchResponse
-	json.Unmarshal(body, &search_response)
+	var searchResponse responses.SearchResponse
+	err = json.Unmarshal(body, &searchResponse)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
 
-	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
-	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
-	assert.Equalf(t, 49, search_response.Context.Returned, "search geometry")
-	assert.Equalf(t, "sentinel-s2-l2a-cogs-test", search_response.Features[0].Collection, "search collections")
+	expectedType := "FeatureCollection"
+	if searchResponse.Type != expectedType {
+		t.Errorf("Expected type %s, but got %s", expectedType, searchResponse.Type)
+	}
+
+	expectedLimit := 100
+	if searchResponse.Context.Limit != expectedLimit {
+		t.Errorf("Expected limit %d, but got %d", expectedLimit, searchResponse.Context.Limit)
+	}
+
+	expectedReturned := 49
+	if searchResponse.Context.Returned != expectedReturned {
+		t.Errorf("Expected returned %d, but got %d", expectedReturned, searchResponse.Context.Returned)
+	}
+
+	expectedId := "sentinel-s2-l2a-cogs-test"
+	if searchResponse.Features[0].Collection != expectedId {
+		t.Errorf("Expected id %s, but got %s", expectedId, searchResponse.Features[0].Id)
+	}
 }
 
 func TestSearchNoLine(t *testing.T) {
@@ -362,29 +527,45 @@ func TestSearchNoLine(t *testing.T) {
 	}`)
 	bodyReader := bytes.NewReader(jsonBody)
 
-	resp, err := http.Post(
-		"http://localhost:6002/search",
-		"application/json",
-		bodyReader,
-	)
+	app := Setup()
+	req, _ := http.NewRequest("POST", "/search", bodyReader)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 	defer resp.Body.Close()
 
-	assert.Equalf(t, 200, resp.StatusCode, "create item")
+	if resp.StatusCode != 200 {
+		t.Fatalf("Expected status code 200, but got %d", resp.StatusCode)
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 
-	var search_response responses.SearchResponse
-	json.Unmarshal(body, &search_response)
+	var searchResponse responses.SearchResponse
+	err = json.Unmarshal(body, &searchResponse)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
 
-	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
-	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
-	assert.Equalf(t, 0, search_response.Context.Returned, "search geometry")
+	expectedType := "FeatureCollection"
+	if searchResponse.Type != expectedType {
+		t.Errorf("Expected type %s, but got %s", expectedType, searchResponse.Type)
+	}
+
+	expectedLimit := 100
+	if searchResponse.Context.Limit != expectedLimit {
+		t.Errorf("Expected limit %d, but got %d", expectedLimit, searchResponse.Context.Limit)
+	}
+
+	expectedReturned := 0
+	if searchResponse.Context.Returned != expectedReturned {
+		t.Errorf("Expected returned %d, but got %d", expectedReturned, searchResponse.Context.Returned)
+	}
 }
 
 func TestPostSearchBbox(t *testing.T) {
@@ -394,30 +575,168 @@ func TestPostSearchBbox(t *testing.T) {
 	}`)
 	bodyReader := bytes.NewReader(jsonBody)
 
-	resp, err := http.Post(
-		"http://localhost:6002/search",
-		"application/json",
-		bodyReader,
-	)
+	app := Setup()
+	req, _ := http.NewRequest("POST", "/search", bodyReader)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 	defer resp.Body.Close()
 
-	assert.Equalf(t, 200, resp.StatusCode, "create item")
+	if resp.StatusCode != 200 {
+		t.Fatalf("Expected status code 200, but got %d", resp.StatusCode)
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 
-	var search_response responses.SearchResponse
-	json.Unmarshal(body, &search_response)
+	var searchResponse responses.SearchResponse
+	err = json.Unmarshal(body, &searchResponse)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
 
-	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
-	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
-	assert.Equalf(t, 50, search_response.Context.Returned, "search geometry")
-	assert.Equalf(t, "sentinel-s2-l2a-cogs-test", search_response.Features[0].Collection, "search collections")
+	expectedType := "FeatureCollection"
+	if searchResponse.Type != expectedType {
+		t.Errorf("Expected type %s, but got %s", expectedType, searchResponse.Type)
+	}
+
+	expectedLimit := 100
+	if searchResponse.Context.Limit != expectedLimit {
+		t.Errorf("Expected limit %d, but got %d", expectedLimit, searchResponse.Context.Limit)
+	}
+
+	expectedReturned := 50
+	if searchResponse.Context.Returned != expectedReturned {
+		t.Errorf("Expected returned %d, but got %d", expectedReturned, searchResponse.Context.Returned)
+	}
+
+	expectedId := "sentinel-s2-l2a-cogs-test"
+	if searchResponse.Features[0].Collection != expectedId {
+		t.Errorf("Expected id %s, but got %s", expectedId, searchResponse.Features[0].Id)
+	}
+}
+
+func TestPostSearchBboxSort(t *testing.T) {
+	jsonBody := []byte(`{
+		"collections": ["sentinel-s2-l2a-cogs-test"],
+		"bbox": [97.504892,-75.254738,179.321298,-65.431580],
+		"sortby": [{"field": "id", "direction": "DESC"}]
+	}`)
+	bodyReader := bytes.NewReader(jsonBody)
+
+	app := Setup()
+	req, _ := http.NewRequest("POST", "/search", bodyReader)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		t.Fatalf("Expected status code 200, but got %d", resp.StatusCode)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
+
+	var searchResponse responses.SearchResponse
+	err = json.Unmarshal(body, &searchResponse)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
+
+	expectedType := "FeatureCollection"
+	if searchResponse.Type != expectedType {
+		t.Errorf("Expected type %s, but got %s", expectedType, searchResponse.Type)
+	}
+
+	expectedLimit := 100
+	if searchResponse.Context.Limit != expectedLimit {
+		t.Errorf("Expected limit %d, but got %d", expectedLimit, searchResponse.Context.Limit)
+	}
+
+	expectedReturned := 50
+	if searchResponse.Context.Returned != expectedReturned {
+		t.Errorf("Expected returned %d, but got %d", expectedReturned, searchResponse.Context.Returned)
+	}
+
+	expectedId := "sentinel-s2-l2a-cogs-test"
+	if searchResponse.Features[0].Collection != expectedId {
+		t.Errorf("Expected id %s, but got %s", expectedId, searchResponse.Features[0].Id)
+	}
+
+	expectedId = "S2B_1CCV_20201222_0_L2A"
+	if searchResponse.Features[0].Id != expectedId {
+		t.Errorf("Expected id %s, but got %s", expectedId, searchResponse.Features[0].Id)
+	}
+}
+
+func TestPostSearchBboxSortDatetime(t *testing.T) {
+	jsonBody := []byte(`{
+		"collections": ["sentinel-s2-l2a-cogs-test"],
+		"bbox": [97.504892,-75.254738,179.321298,-65.431580],
+		"sortby": [{"field": "properties.datetime", "direction": "DESC"}]
+	}`)
+	bodyReader := bytes.NewReader(jsonBody)
+
+	app := Setup()
+	req, _ := http.NewRequest("POST", "/search", bodyReader)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		t.Fatalf("Expected status code 200, but got %d", resp.StatusCode)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
+
+	var searchResponse responses.SearchResponse
+	err = json.Unmarshal(body, &searchResponse)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
+
+	expectedType := "FeatureCollection"
+	if searchResponse.Type != expectedType {
+		t.Errorf("Expected type %s, but got %s", expectedType, searchResponse.Type)
+	}
+
+	expectedLimit := 100
+	if searchResponse.Context.Limit != expectedLimit {
+		t.Errorf("Expected limit %d, but got %d", expectedLimit, searchResponse.Context.Limit)
+	}
+
+	expectedReturned := 50
+	if searchResponse.Context.Returned != expectedReturned {
+		t.Errorf("Expected returned %d, but got %d", expectedReturned, searchResponse.Context.Returned)
+	}
+
+	expectedId := "sentinel-s2-l2a-cogs-test"
+	if searchResponse.Features[0].Collection != expectedId {
+		t.Errorf("Expected id %s, but got %s", expectedId, searchResponse.Features[0].Id)
+	}
+
+	expectedId = "S2B_1CCV_20201222_0_L2A"
+	if searchResponse.Features[0].Id != expectedId {
+		t.Errorf("Expected id %s, but got %s", expectedId, searchResponse.Features[0].Id)
+	}
 }
 
 func TestPostSearchBbox3d(t *testing.T) {
@@ -427,30 +746,50 @@ func TestPostSearchBbox3d(t *testing.T) {
 	}`)
 	bodyReader := bytes.NewReader(jsonBody)
 
-	resp, err := http.Post(
-		"http://localhost:6002/search",
-		"application/json",
-		bodyReader,
-	)
+	app := Setup()
+	req, _ := http.NewRequest("POST", "/search", bodyReader)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 	defer resp.Body.Close()
 
-	assert.Equalf(t, 200, resp.StatusCode, "create item")
+	if resp.StatusCode != 200 {
+		t.Fatalf("Expected status code 200, but got %d", resp.StatusCode)
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 
-	var search_response responses.SearchResponse
-	json.Unmarshal(body, &search_response)
+	var searchResponse responses.SearchResponse
+	err = json.Unmarshal(body, &searchResponse)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
 
-	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
-	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
-	assert.Equalf(t, 50, search_response.Context.Returned, "search geometry")
-	assert.Equalf(t, "sentinel-s2-l2a-cogs-test", search_response.Features[0].Collection, "search collections")
+	expectedType := "FeatureCollection"
+	if searchResponse.Type != expectedType {
+		t.Errorf("Expected type %s, but got %s", expectedType, searchResponse.Type)
+	}
+
+	expectedLimit := 100
+	if searchResponse.Context.Limit != expectedLimit {
+		t.Errorf("Expected limit %d, but got %d", expectedLimit, searchResponse.Context.Limit)
+	}
+
+	expectedReturned := 50
+	if searchResponse.Context.Returned != expectedReturned {
+		t.Errorf("Expected returned %d, but got %d", expectedReturned, searchResponse.Context.Returned)
+	}
+
+	expectedId := "sentinel-s2-l2a-cogs-test"
+	if searchResponse.Features[0].Collection != expectedId {
+		t.Errorf("Expected id %s, but got %s", expectedId, searchResponse.Features[0].Id)
+	}
 }
 
 func TestPostSearchBboxNoResults(t *testing.T) {
@@ -460,154 +799,272 @@ func TestPostSearchBboxNoResults(t *testing.T) {
 	}`)
 	bodyReader := bytes.NewReader(jsonBody)
 
-	resp, err := http.Post(
-		"http://localhost:6002/search",
-		"application/json",
-		bodyReader,
-	)
+	app := Setup()
+	req, _ := http.NewRequest("POST", "/search", bodyReader)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 	defer resp.Body.Close()
 
-	assert.Equalf(t, 200, resp.StatusCode, "create item")
+	if resp.StatusCode != 200 {
+		t.Fatalf("Expected status code 200, but got %d", resp.StatusCode)
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 
-	var search_response responses.SearchResponse
-	json.Unmarshal(body, &search_response)
+	var searchResponse responses.SearchResponse
+	err = json.Unmarshal(body, &searchResponse)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
 
-	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
-	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
-	assert.Equalf(t, 0, search_response.Context.Returned, "search geometry")
+	expectedType := "FeatureCollection"
+	if searchResponse.Type != expectedType {
+		t.Errorf("Expected type %s, but got %s", expectedType, searchResponse.Type)
+	}
+
+	expectedLimit := 100
+	if searchResponse.Context.Limit != expectedLimit {
+		t.Errorf("Expected limit %d, but got %d", expectedLimit, searchResponse.Context.Limit)
+	}
+
+	expectedReturned := 0
+	if searchResponse.Context.Returned != expectedReturned {
+		t.Errorf("Expected returned %d, but got %d", expectedReturned, searchResponse.Context.Returned)
+	}
 }
 
 func TestGetSearchBbox(t *testing.T) {
+	app := Setup()
+	req, _ := http.NewRequest("GET", "/search?bbox=97.504892,-75.254738,179.321298,-65.431580", nil)
+	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := http.Get(
-		"http://localhost:6002/search?bbox=97.504892,-75.254738,179.321298,-65.431580",
-	)
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 	defer resp.Body.Close()
 
-	assert.Equalf(t, 200, resp.StatusCode, "create item")
+	if resp.StatusCode != 200 {
+		t.Fatalf("Expected status code 200, but got %d", resp.StatusCode)
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 
-	var search_response responses.SearchResponse
-	json.Unmarshal(body, &search_response)
+	var searchResponse responses.SearchResponse
+	err = json.Unmarshal(body, &searchResponse)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
 
-	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
-	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
-	assert.Equalf(t, 50, search_response.Context.Returned, "search geometry")
-	assert.Equalf(t, "sentinel-s2-l2a-cogs-test", search_response.Features[0].Collection, "search collections")
+	expectedType := "FeatureCollection"
+	if searchResponse.Type != expectedType {
+		t.Errorf("Expected type %s, but got %s", expectedType, searchResponse.Type)
+	}
+
+	expectedLimit := 100
+	if searchResponse.Context.Limit != expectedLimit {
+		t.Errorf("Expected limit %d, but got %d", expectedLimit, searchResponse.Context.Limit)
+	}
+
+	expectedReturned := 50
+	if searchResponse.Context.Returned != expectedReturned {
+		t.Errorf("Expected returned %d, but got %d", expectedReturned, searchResponse.Context.Returned)
+	}
+
+	expectedId := "sentinel-s2-l2a-cogs-test"
+	if searchResponse.Features[0].Collection != expectedId {
+		t.Errorf("Expected id %s, but got %s", expectedId, searchResponse.Features[0].Id)
+	}
 }
 
 func TestGetSearchBboxLimit(t *testing.T) {
+	app := Setup()
+	req, _ := http.NewRequest("GET", "/search?bbox=97.504892,-75.254738,179.321298,-65.431580&limit=10", nil)
+	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := http.Get(
-		"http://localhost:6002/search?bbox=97.504892,-75.254738,179.321298,-65.431580&limit=10",
-	)
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 	defer resp.Body.Close()
 
-	assert.Equalf(t, 200, resp.StatusCode, "create item")
+	if resp.StatusCode != 200 {
+		t.Fatalf("Expected status code 200, but got %d", resp.StatusCode)
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 
-	var search_response responses.SearchResponse
-	json.Unmarshal(body, &search_response)
+	var searchResponse responses.SearchResponse
+	err = json.Unmarshal(body, &searchResponse)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
 
-	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
-	assert.Equalf(t, 10, search_response.Context.Limit, "search geometry")
-	assert.Equalf(t, 10, search_response.Context.Returned, "search geometry")
-	assert.Equalf(t, "sentinel-s2-l2a-cogs-test", search_response.Features[0].Collection, "search collections")
+	expectedType := "FeatureCollection"
+	if searchResponse.Type != expectedType {
+		t.Errorf("Expected type %s, but got %s", expectedType, searchResponse.Type)
+	}
+
+	expectedLimit := 10
+	if searchResponse.Context.Limit != expectedLimit {
+		t.Errorf("Expected limit %d, but got %d", expectedLimit, searchResponse.Context.Limit)
+	}
+
+	expectedReturned := 10
+	if searchResponse.Context.Returned != expectedReturned {
+		t.Errorf("Expected returned %d, but got %d", expectedReturned, searchResponse.Context.Returned)
+	}
+
+	expectedId := "sentinel-s2-l2a-cogs-test"
+	if searchResponse.Features[0].Collection != expectedId {
+		t.Errorf("Expected id %s, but got %s", expectedId, searchResponse.Features[0].Id)
+	}
 }
 
 func TestGetSearchBboxNoResults(t *testing.T) {
-	resp, err := http.Get(
-		"http://localhost:6002/search?bbox=17.504892,-75.254738,99.321298,-65.431580",
-	)
+	app := Setup()
+	req, _ := http.NewRequest("GET", "/search?bbox=17.504892,-75.254738,99.321298,-65.431580", nil)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 	defer resp.Body.Close()
 
-	assert.Equalf(t, 200, resp.StatusCode, "create item")
+	if resp.StatusCode != 200 {
+		t.Fatalf("Expected status code 200, but got %d", resp.StatusCode)
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 
-	var search_response responses.SearchResponse
-	json.Unmarshal(body, &search_response)
+	var searchResponse responses.SearchResponse
+	err = json.Unmarshal(body, &searchResponse)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
 
-	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
-	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
-	assert.Equalf(t, 0, search_response.Context.Returned, "search geometry")
+	expectedType := "FeatureCollection"
+	if searchResponse.Type != expectedType {
+		t.Errorf("Expected type %s, but got %s", expectedType, searchResponse.Type)
+	}
+
+	expectedLimit := 100
+	if searchResponse.Context.Limit != expectedLimit {
+		t.Errorf("Expected limit %d, but got %d", expectedLimit, searchResponse.Context.Limit)
+	}
+
+	expectedReturned := 0
+	if searchResponse.Context.Returned != expectedReturned {
+		t.Errorf("Expected returned %d, but got %d", expectedReturned, searchResponse.Context.Returned)
+	}
 }
 
 func TestGetSearchLine(t *testing.T) {
+	app := Setup()
 
-	resp, err := http.Get(
-		`http://localhost:6002/search?geometry={"type": "LineString","coordinates": [[179.85156249999997,-70.554563528593656],[171.101642,-75.690647]]}`,
-	)
+	url := "/search?geometry=" + url.QueryEscape(`{"type": "LineString","coordinates": [[179.85156249999997,-70.554563528593656],[171.101642,-75.690647]]}`)
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 	defer resp.Body.Close()
 
-	assert.Equalf(t, 200, resp.StatusCode, "create item")
+	if resp.StatusCode != 200 {
+		t.Fatalf("Expected status code 200, but got %d", resp.StatusCode)
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 
-	var search_response responses.SearchResponse
-	json.Unmarshal(body, &search_response)
+	var searchResponse responses.SearchResponse
+	err = json.Unmarshal(body, &searchResponse)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
 
-	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
-	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
-	assert.Equalf(t, 49, search_response.Context.Returned, "search geometry")
-	assert.Equalf(t, "sentinel-s2-l2a-cogs-test", search_response.Features[0].Collection, "search collections")
+	expectedType := "FeatureCollection"
+	if searchResponse.Type != expectedType {
+		t.Errorf("Expected type %s, but got %s", expectedType, searchResponse.Type)
+	}
+
+	expectedLimit := 100
+	if searchResponse.Context.Limit != expectedLimit {
+		t.Errorf("Expected limit %d, but got %d", expectedLimit, searchResponse.Context.Limit)
+	}
+
+	expectedReturned := 49
+	if searchResponse.Context.Returned != expectedReturned {
+		t.Errorf("Expected returned %d, but got %d", expectedReturned, searchResponse.Context.Returned)
+	}
+
+	expectedId := "sentinel-s2-l2a-cogs-test"
+	if searchResponse.Features[0].Collection != expectedId {
+		t.Errorf("Expected id %s, but got %s", expectedId, searchResponse.Features[0].Id)
+	}
 }
 
 func TestGetSearchLineNoResults(t *testing.T) {
+	app := Setup()
 
-	resp, err := http.Get(
-		`http://localhost:6002/search?geometry={"type": "LineString","coordinates": [[19.85156249999997,-70.554563528593656],[11.101642,-75.690647]]}`,
-	)
+	url := "/search?geometry=" + url.QueryEscape(`{"type": "LineString","coordinates": [[19.85156249999997,-70.554563528593656],[11.101642,-75.690647]]}`)
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 	defer resp.Body.Close()
 
-	assert.Equalf(t, 200, resp.StatusCode, "create item")
+	if resp.StatusCode != 200 {
+		t.Fatalf("Expected status code 200, but got %d", resp.StatusCode)
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatalf("An error occurred: %v", err)
 	}
 
-	var search_response responses.SearchResponse
-	json.Unmarshal(body, &search_response)
+	var searchResponse responses.SearchResponse
+	err = json.Unmarshal(body, &searchResponse)
+	if err != nil {
+		t.Fatalf("An error occurred: %v", err)
+	}
 
-	assert.Equalf(t, "FeatureCollection", search_response.Type, "search geometry")
-	assert.Equalf(t, 100, search_response.Context.Limit, "search geometry")
-	assert.Equalf(t, 0, search_response.Context.Returned, "search geometry")
+	expectedType := "FeatureCollection"
+	if searchResponse.Type != expectedType {
+		t.Errorf("Expected type %s, but got %s", expectedType, searchResponse.Type)
+	}
+
+	expectedLimit := 100
+	if searchResponse.Context.Limit != expectedLimit {
+		t.Errorf("Expected limit %d, but got %d", expectedLimit, searchResponse.Context.Limit)
+	}
+
+	expectedReturned := 0
+	if searchResponse.Context.Returned != expectedReturned {
+		t.Errorf("Expected returned %d, but got %d", expectedReturned, searchResponse.Context.Returned)
+	}
 }

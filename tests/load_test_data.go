@@ -4,10 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"go-stac-api-postgres/database"
+	"go-stac-api-postgres/models"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/go-playground/validator"
 )
 
 func LoadCollection() {
@@ -20,19 +24,13 @@ func LoadCollection() {
 
 	responseBody := bytes.NewBuffer(byteValue)
 
-	resp, err := http.Post("http://localhost:6002/collections", "application/json", responseBody)
-
-	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+	collection := models.Collection{
+		Data: models.JSONB{(&responseBody)},
+		Id:   "sentinel-s2-l2a-cogs-test",
 	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	sb := string(body)
-	log.Printf(sb)
+	validator := validator.New()
+	_ = validator.Struct(collection)
+	err = database.DB.Db.Create(&collection).Error
 }
 
 func LoadItems() {

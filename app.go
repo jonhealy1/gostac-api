@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
@@ -20,8 +22,14 @@ import (
 func main() {
 	app := Setup()
 
-	// Listen on port 6002
-	log.Fatal(app.Listen(fmt.Sprintf(":%d", 6002)))
+	value, exists := os.LookupEnv("API_PORT")
+	api_port := 6002
+	if exists {
+		api_port, _ = strconv.Atoi(value)
+	}
+
+	// Listen on api port
+	log.Fatal(app.Listen(fmt.Sprintf(":%d", api_port)))
 }
 
 func Setup() *fiber.App {

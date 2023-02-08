@@ -23,7 +23,7 @@ WORKDIR /app
 COPY --from=build /go/src/go-stac-api/app .
 COPY --from=build /go/src/go-stac-api/.env .
 
-# Exposes port 3000 because our program listens on that port
-EXPOSE 6000
+# Exposes port 6002 because our program listens on that port
+EXPOSE 6002
 
 CMD ["./app"]

@@ -1,0 +1,49 @@
+name: Test goapistac
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+      - features/**
+
+jobs:
+  services:
+  postgres:
+    image: postgis/postgis:10-2.5
+    env:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgis
+      POSTGRES_USER: username
+      PGUSER: username
+      PGPASSWORD: password
+      PGHOST: localhost
+      PGDATABASE: postgis
+
+    ports:
+      - 5433:5432
+    options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.15.x
+
+    - name: Run api server
+      run: |
+        go run app.go &
+
+    - name: Test Go application
+      run: |
+        go get github.com/joho/godotenv/cmd/godotenv@latest
+        godotenv -f .env-example go test ./...
+  
