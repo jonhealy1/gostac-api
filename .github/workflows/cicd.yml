@@ -40,7 +40,7 @@ jobs:
 
     - name: Run api server
       run: |
-        nohup go run app.go &
+        go run app.go &
 
     - name: Test Go application
       run: |
