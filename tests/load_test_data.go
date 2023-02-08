@@ -2,13 +2,12 @@ package tests
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"go-stac-api-postgres/database"
 	"go-stac-api-postgres/models"
 	"io/ioutil"
-	"log"
-	"net/http"
 	"os"
 
 	"github.com/go-playground/validator"
@@ -45,22 +44,34 @@ func LoadItems() {
 		Type     string        `json:"type"`
 		Features []interface{} `json:"features"`
 	}
-
 	var fc FeatureCollection
-
 	json.Unmarshal(byteValue, &fc)
-
-	print(len(fc.Features))
 
 	var i int
 	for i < (len(fc.Features) - 50) {
 		test, _ := json.Marshal(fc.Features[i])
-		responseBody := bytes.NewBuffer(test)
-		resp, err := http.Post("http://localhost:6002/collections/sentinel-s2-l2a-cogs-test/items", "application/json", responseBody)
-		if err != nil {
-			log.Fatalf("An Error Occured %v", err)
+		stac_item := new(models.StacItem)
+		json.Unmarshal(test, &stac_item)
+
+		coordinatesString := "[["
+		for _, s := range stac_item.Geometry.Coordinates[0] {
+			coordinatesString = coordinatesString + fmt.Sprintf("[%f, %f],", s[0], s[1])
 		}
-		defer resp.Body.Close()
+		coordinatesString = coordinatesString + "]]"
+		rawGeometryJSON := fmt.Sprintf("{'type':'Polygon', 'coordinates':%s}", coordinatesString)
+		err = database.DB.Db.Exec(
+			`INSERT INTO items (id, collection, data, geometry) 
+			VALUES (
+				@id, 
+				@collection, 
+				@data, 
+				ST_GeomFromEWKB(ST_GeomFromGeoJSON(@geometry)))`,
+			sql.Named("id", stac_item.Id),
+			sql.Named("collection", stac_item.Collection),
+			sql.Named("data", stac_item),
+			sql.Named("geometry", rawGeometryJSON),
+		).Error
+
 		i = i + 1
 	}
 }
