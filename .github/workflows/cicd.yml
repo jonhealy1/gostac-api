@@ -15,7 +15,7 @@ jobs:
 
     services:
       postgres:
-        uses: postgis/postgis:10-2.5
+        image: postgis/postgis:10-2.5
         env:
           POSTGRES_PASSWORD: password
           POSTGRES_DB: postgis
