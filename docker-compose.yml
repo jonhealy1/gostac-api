@@ -1,6 +1,7 @@
 version: '3.8'
 services: 
   api:
+    container_name: api
     build: .
     restart: always 
     environment:
@@ -9,6 +10,11 @@ services:
       - POSTGRES_DBNAME=postgis
       - POSTGRES_PORT=5432
       - POSTGRES_HOST=database
+      - ES_HOST=elasticsearch
+      - ES_PORT=9200
+      - ES_USER=username
+      - ES_PASS=password
+
     ports:
       - "6002:6002"
     expose:
@@ -19,7 +25,7 @@ services:
       - database
 
   database:
-    container_name: stac-db
+    container_name: postgres
     image: ghcr.io/stac-utils/pgstac:v0.6.6
     environment:
       - POSTGRES_USER=username
@@ -32,3 +38,23 @@ services:
     ports:
       - "5433:5432"
     command: postgres -N 500
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.2
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+
+volumes:
+  esdata:
