@@ -215,9 +215,6 @@ func GetItem(c *fiber.Ctx) error {
 		return nil
 	}
 
-	// var results []map[string]interface{}
-	// database.DB.Db.Table("items").Find(&results)
-
 	result := &models.Item{}
 	database.DB.Db.Table("items").Where("id = ? AND collection = ?", item_id, collection_id).Find(&result)
 
@@ -257,45 +254,44 @@ func GetItem(c *fiber.Ctx) error {
 // @Router /collections/{collectionId}/items [get]
 // @Success 200 {object} models.ItemCollection
 func GetItemCollection(c *fiber.Ctx) error {
-	var items []models.Item
-	collection_id := c.Params("collectionId")
-
-	if collection_id == "" {
-		c.Status(http.StatusInternalServerError).JSON(&fiber.Map{
-			"message": "id cannot be empty",
+	collectionID := c.Params("collectionId")
+	if collectionID == "" {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"message": "collection ID cannot be empty",
 		})
-		return nil
 	}
 
 	limit := 100
 
-	err := database.DB.Db.Where("collection = ?", collection_id).Find(&items).Error
-
+	var items []models.Item
+	err := database.DB.Db.Where("collection = ?", collectionID).Limit(limit).Find(&items).Error
 	if err != nil {
-		c.Status(http.StatusBadRequest).JSON(
-			&fiber.Map{"message": "could not get collections"})
-		return err
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"message": "failed to retrieve items from collection",
+			"error":   err.Error(),
+		})
 	}
 
-	context := models.Context{
-		Returned: len(items),
-		Limit:    limit,
-	}
-
-	var stac_items []interface{}
-	for _, a_item := range items {
+	var stacItems []interface{}
+	for _, item := range items {
 		var itemMap map[string]interface{}
-		json.Unmarshal([]byte(a_item.Data), &itemMap)
-		stac_items = append(stac_items, itemMap)
+		if err := json.Unmarshal([]byte(item.Data), &itemMap); err != nil {
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+				"message": "failed to unmarshal item data",
+				"error":   err.Error(),
+			})
+		}
+		stacItems = append(stacItems, itemMap)
 	}
 
-	c.Status(http.StatusOK).JSON(&fiber.Map{
+	return c.Status(http.StatusOK).JSON(fiber.Map{
 		"message":    "item collection retrieved successfully",
-		"collection": collection_id,
-		"context":    context,
-		"type":       "FeatureCollection",
-		"features":   stac_items,
+		"collection": collectionID,
+		"context": models.Context{
+			Returned: len(items),
+			Limit:    limit,
+		},
+		"type":     "FeatureCollection",
+		"features": stacItems,
 	})
-
-	return nil
 }
