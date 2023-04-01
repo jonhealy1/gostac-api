@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/olivere/elastic/v7"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -16,7 +17,12 @@ type Dbinstance struct {
 	Db *gorm.DB
 }
 
+type ESInstance struct {
+	Client *elastic.Client
+}
+
 var DB Dbinstance
+var ES ESInstance
 
 func getEnv(key string) (string, error) {
 	err := godotenv.Load()
@@ -70,3 +76,74 @@ func ConnectDb() {
 		Db: db,
 	}
 }
+
+func ConnectES() {
+	host, port, user, pass := "", "", "", ""
+	host, err := getEnv("ES_HOST")
+
+	// this is done for CI, not ideal ....
+	if err != nil {
+		host = "localhost"
+		port = "9200"
+		user = ""
+		pass = ""
+	} else {
+		port, _ = getEnv("ES_PORT")
+		user, _ = getEnv("ES_USER")
+		pass, _ = getEnv("ES_PASS")
+	}
+
+	dsn := fmt.Sprintf(
+		"http://%s:%s",
+		host, port,
+	)
+
+	es, err := elastic.NewClient(
+		elastic.SetURL(dsn),
+		elastic.SetSniff(false),
+		elastic.SetBasicAuth(user, pass), // Add this line to set basic authentication
+	)
+
+	if err != nil {
+		log.Fatal("Failed to connect to elastic search. \n", err)
+	}
+
+	log.Println("connected to elastic search")
+	ES = ESInstance{
+		Client: es,
+	}
+}
+
+// func ConnectRedis() {
+// 	host, port, pass := "", "", ""
+// 	host, err := getEnv("REDIS_HOST")
+
+// 	// this is done for CI, not ideal ....
+// 	if err != nil {
+// 		host = "localhost"
+// 		port = "6379"
+// 		pass = ""
+// 	} else {
+// 		port, _ = getEnv("REDIS_PORT")
+// 		pass, _ = getEnv("REDIS_PASS")
+// 	}
+
+// 	dsn := fmt.Sprintf(
+// 		"%s:%s",
+// 		host, port,
+// 	)
+
+// 	client := redis.NewClient(&redis.Options{
+// 		Addr:     dsn,
+// 		Password: pass, // no password set
+// 		DB:       0,    // use default DB
+// 	})
+
+// 	_, err = client.Ping().Result()
+// 	if err != nil {
+// 		log.Fatal("Failed to connect to redis. \n", err)
+// 	}
+
+// 	log.Println("connected to redis")
+// 	Redis = client
+// }

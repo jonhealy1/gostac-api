@@ -33,9 +33,14 @@ func main() {
 }
 
 func Setup() *fiber.App {
+	// connect to database: postgres and elastic search
 	database.ConnectDb()
+	database.ConnectES()
+
+	// create new fiber app
 	app := fiber.New()
 
+	// register middleware
 	app.Use(cors.New())
 	app.Use(compress.New())
 	//app.Use(cache.New())
