@@ -1,4 +1,4 @@
-module go-stac-api-postgres
+module github.com/jonhealy1/goapi-stac
 
 go 1.16
 

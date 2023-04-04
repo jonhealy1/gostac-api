@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"time"
 
-	"go-stac-api-postgres/database"
+	"github.com/jonhealy1/goapi-stac/database"
 
 	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
 
-	"go-stac-api-postgres/models"
+	"github.com/jonhealy1/goapi-stac/models"
 )
 
 func CreateESCollection(c *fiber.Ctx) error {

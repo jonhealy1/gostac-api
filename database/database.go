@@ -2,9 +2,10 @@ package database
 
 import (
 	"fmt"
-	"go-stac-api-postgres/models"
 	"log"
 	"os"
+
+	"github.com/jonhealy1/goapi-stac/models"
 
 	"github.com/joho/godotenv"
 	"github.com/olivere/elastic/v7"

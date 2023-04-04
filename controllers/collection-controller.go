@@ -1,9 +1,10 @@
 package controllers
 
 import (
-	"go-stac-api-postgres/database"
-	"go-stac-api-postgres/models"
 	"net/http"
+
+	"github.com/jonhealy1/goapi-stac/database"
+	"github.com/jonhealy1/goapi-stac/models"
 
 	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
