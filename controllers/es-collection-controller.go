@@ -128,7 +128,7 @@ func CreateESCollection(c *fiber.Ctx) error {
 }
 
 func GetESCollection(c *fiber.Ctx) error {
-	collectionID := c.Params("collection_id")
+	collectionID := c.Params("collectionId")
 
 	indexName := "collections"
 
@@ -146,8 +146,12 @@ func GetESCollection(c *fiber.Ctx) error {
 			return c.Status(http.StatusNotFound).JSON(
 				&fiber.Map{"message": fmt.Sprintf("%s does not exist", collectionID)})
 		}
+		if elasticErr, ok := err.(*elastic.Error); ok {
+			return c.Status(http.StatusInternalServerError).JSON(
+				&fiber.Map{"message": fmt.Sprintf("Error retrieving the collection: %v, Status: %v", err, elasticErr.Status)})
+		}
 		return c.Status(http.StatusInternalServerError).JSON(
-			&fiber.Map{"message": "Error retrieving the collection"})
+			&fiber.Map{"message": fmt.Sprintf("Error retrieving the collection: %v", err)})
 	}
 
 	// Unmarshal the Elasticsearch document source into a models.Collection
