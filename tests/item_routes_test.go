@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"go-stac-api-postgres/models"
-	"go-stac-api-postgres/responses"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"testing"
+
+	"github.com/jonhealy1/goapi-stac/models"
+	"github.com/jonhealy1/goapi-stac/responses"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -3,11 +3,12 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
-	"go-stac-api-postgres/responses"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"testing"
+
+	"github.com/jonhealy1/goapi-stac/responses"
 )
 
 func TestSearchItems(t *testing.T) {

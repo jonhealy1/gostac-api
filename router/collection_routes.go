@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"go-stac-api-postgres/controllers"
+	"github.com/jonhealy1/goapi-stac/controllers"
 
 	"github.com/gofiber/fiber/v2"
 )

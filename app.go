@@ -15,8 +15,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 
-	database "go-stac-api-postgres/database"
-	router "go-stac-api-postgres/router"
+	database "github.com/jonhealy1/goapi-stac/database"
+	router "github.com/jonhealy1/goapi-stac/router"
 )
 
 func main() {

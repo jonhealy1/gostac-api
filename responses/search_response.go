@@ -1,7 +1,7 @@
 package responses
 
 import (
-	"go-stac-api-postgres/models"
+	"github.com/jonhealy1/goapi-stac/models"
 
 	"github.com/lib/pq"
 )
