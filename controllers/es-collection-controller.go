@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
-	"github.com/olivere/elastic/v7"
 
 	"go-stac-api-postgres/models"
 )
@@ -38,13 +37,48 @@ func CreateESCollection(c *fiber.Ctx) error {
 		return err
 	}
 
+	// Define the mapping for the index
+	mapping := `{
+		"mappings": {
+			"properties": {
+			"data": {
+				"properties": {
+				"extent": {
+					"properties": {
+					"temporal": {
+						"properties": {
+						"interval": {
+							"type": "text"
+						}
+						}
+					}
+					}
+				}
+				}
+			}
+			}
+		}
+	}`
+
 	// Create Elasticsearch index if it doesn't exist
 	indexName := "collections"
-	_, err = database.ES.Client.CreateIndex(indexName).Do(context.Background())
-	if err != nil && !elastic.IsConflict(err) {
+
+	_, _ = database.ES.Client.DeleteIndex(indexName).Do(context.Background())
+
+	exists, err := database.ES.Client.IndexExists(indexName).Do(context.Background())
+	if err != nil {
 		c.Status(http.StatusInternalServerError).JSON(
-			&fiber.Map{"message": "could not create Elasticsearch index"})
+			&fiber.Map{"message": "could not contact Elasticsearch"})
 		return err
+	}
+	if !exists {
+		// _, err := database.ES.Client.CreateIndex(indexName).Do(context.Background())
+		_, err := database.ES.Client.CreateIndex(indexName).BodyString(mapping).Do(context.Background())
+		if err != nil {
+			c.Status(http.StatusInternalServerError).JSON(
+				&fiber.Map{"message": "could not create Elasticsearch index"})
+			return err
+		}
 	}
 
 	// Index the collection document in Elasticsearch
