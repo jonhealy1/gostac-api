@@ -23,9 +23,11 @@ func CreateESCollection(c *fiber.Ctx) error {
 		return err
 	}
 
+	now := time.Now()
 	collection := models.Collection{
-		Data: models.JSONB{(&stac_collection)},
-		Id:   stac_collection.Id,
+		Data:      models.JSONB{(&stac_collection)},
+		Id:        stac_collection.Id,
+		CreatedAt: &now,
 	}
 	validator := validator.New()
 	err = validator.Struct(collection)
