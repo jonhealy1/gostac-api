@@ -3,10 +3,12 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/jonhealy1/goapi-stac/database"
+	"github.com/olivere/elastic"
 
 	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
@@ -112,4 +114,38 @@ func CreateESCollection(c *fiber.Ctx) error {
 		"stac_collection": collection.Data[0],
 	})
 	return nil
+}
+
+func GetESCollection(c *fiber.Ctx) error {
+	collectionID := c.Params("collection_id")
+
+	indexName := "collections"
+
+	// Retrieve the collection document from Elasticsearch
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	resp, err := database.ES.Client.Get().
+		Index(indexName).
+		Id(collectionID).
+		Do(ctx)
+
+	if err != nil {
+		if elastic.IsNotFound(err) {
+			return c.Status(http.StatusNotFound).JSON(
+				&fiber.Map{"message": fmt.Sprintf("%s does not exist", collectionID)})
+		}
+		return c.Status(http.StatusInternalServerError).JSON(
+			&fiber.Map{"message": "Error retrieving the collection"})
+	}
+
+	// Unmarshal the Elasticsearch document source into a models.Collection
+	var collection models.Collection
+	if err := json.Unmarshal(resp.Source, &collection); err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(
+			&fiber.Map{"message": "Error unmarshalling the collection"})
+	}
+
+	// Return the stac_collection JSON
+	return c.JSON(collection.Data[0])
 }
