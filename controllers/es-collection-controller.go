@@ -89,6 +89,17 @@ func CreateESCollection(c *fiber.Ctx) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	_, err = database.ES.Client.Get().
+		Index(indexName).
+		Id(collection.Id).
+		Do(ctx)
+
+	if err == nil {
+		c.Status(http.StatusConflict).JSON(
+			&fiber.Map{"message": fmt.Sprintf("Collection %s already exists", collection.Id)})
+		return err
+	}
+
 	doc, err := json.Marshal(collection)
 	if err != nil {
 		c.Status(http.StatusInternalServerError).JSON(
