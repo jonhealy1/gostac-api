@@ -149,3 +149,40 @@ func GetESCollection(c *fiber.Ctx) error {
 	// Return the stac_collection JSON
 	return c.JSON(collection.Data[0])
 }
+
+func GetESCollections(c *fiber.Ctx) error {
+	indexName := "collections"
+
+	// Retrieve all collection documents from Elasticsearch
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	searchResult, err := database.ES.Client.Search().
+		Index(indexName).
+		Size(1000). // Adjust this value based on the expected number of collections
+		Sort("CreatedAt", true).
+		Do(ctx)
+
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(
+			&fiber.Map{"message": "Error retrieving the collections"})
+	}
+
+	// Unmarshal the Elasticsearch documents sources into a list of models.Collection
+	collections := make([]models.Collection, 0, len(searchResult.Hits.Hits))
+	for _, hit := range searchResult.Hits.Hits {
+		var collection models.Collection
+		if err := json.Unmarshal(hit.Source, &collection); err != nil {
+			return c.Status(http.StatusInternalServerError).JSON(
+				&fiber.Map{"message": "Error unmarshalling the collection"})
+		}
+		collections = append(collections, collection)
+	}
+
+	// Extract and return the collection.Data from each collection
+	collectionDataList := make([]interface{}, len(collections))
+	for i, collection := range collections {
+		collectionDataList[i] = collection.Data[0]
+	}
+	return c.JSON(collectionDataList)
+}
