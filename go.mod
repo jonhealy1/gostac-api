@@ -10,6 +10,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lib/pq v1.3.0
+	github.com/olivere/elastic v6.2.37+incompatible // indirect
 	github.com/olivere/elastic/v7 v7.0.32 // indirect
 	github.com/spatial-go/geoos v1.1.3 // indirect
 	github.com/stretchr/testify v1.8.0 // indirect
