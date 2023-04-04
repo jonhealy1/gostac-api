@@ -65,6 +65,7 @@ func CreateESCollection(c *fiber.Ctx) error {
 	// Create Elasticsearch index if it doesn't exist
 	indexName := "collections"
 
+	// Delete index - just used for testing, comment out in production
 	// _, _ = database.ES.Client.DeleteIndex(indexName).Do(context.Background())
 
 	exists, err := database.ES.Client.IndexExists(indexName).Do(context.Background())
@@ -74,7 +75,6 @@ func CreateESCollection(c *fiber.Ctx) error {
 		return err
 	}
 	if !exists {
-		// _, err := database.ES.Client.CreateIndex(indexName).Do(context.Background())
 		_, err := database.ES.Client.CreateIndex(indexName).BodyString(mapping).Do(context.Background())
 		if err != nil {
 			c.Status(http.StatusInternalServerError).JSON(
