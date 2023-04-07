@@ -16,7 +16,23 @@ import (
 	"github.com/jonhealy1/goapi-stac/models"
 )
 
+func checkCollectionExists(collectionId string) error {
+	indexName := "collections"
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err := database.ES.Client.Get().
+		Index(indexName).
+		Id(collectionId).
+		Do(ctx)
+
+	return err
+}
+
 func ESCreateItem(c *fiber.Ctx) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	collectionId := c.Params("collectionId")
 	if collectionId == "" {
 		c.Status(http.StatusBadRequest).JSON(
@@ -24,15 +40,12 @@ func ESCreateItem(c *fiber.Ctx) error {
 		return fmt.Errorf("missing collectionId parameter")
 	}
 
-	indexName := "collections"
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	// Check if the collection exists
-	_, err := database.ES.Client.Get().
-		Index(indexName).
-		Id(collectionId).
-		Do(ctx)
+	err := checkCollectionExists(collectionId)
+	if err != nil {
+		c.Status(http.StatusNotFound).JSON(
+			&fiber.Map{"message": fmt.Sprintf("Collection %s not found", collectionId)})
+		return err
+	}
 
 	if err != nil {
 		c.Status(http.StatusNotFound).JSON(
@@ -65,22 +78,7 @@ func ESCreateItem(c *fiber.Ctx) error {
 		return err
 	}
 
-	indexName = "items"
-
-	// exists, err := database.ES.Client.IndexExists(indexName).Do(ctx)
-	// if err != nil {
-	// 	c.Status(http.StatusInternalServerError).JSON(
-	// 		&fiber.Map{"message": "could not contact Elasticsearch"})
-	// 	return err
-	// }
-	// if !exists {
-	// 	_, err := database.ES.Client.CreateIndex(indexName).Do(ctx)
-	// 	if err != nil {
-	// 		c.Status(http.StatusInternalServerError).JSON(
-	// 			&fiber.Map{"message": "could not create Elasticsearch index"})
-	// 		return err
-	// 	}
-	// }
+	indexName := "items"
 
 	// Check if the item already exists
 	_, err = database.ES.Client.Get().
