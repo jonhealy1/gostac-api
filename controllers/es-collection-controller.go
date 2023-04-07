@@ -257,10 +257,19 @@ func EditESCollection(c *fiber.Ctx) error {
 		return err
 	}
 
+	// Unmarshal JSON string back into a map
+	var docMap map[string]interface{}
+	err = json.Unmarshal(doc, &docMap)
+	if err != nil {
+		c.Status(http.StatusInternalServerError).JSON(
+			&fiber.Map{"message": "could not unmarshal collection"})
+		return err
+	}
+
 	resp, err := database.ES.Client.Update().
 		Index(indexName).
 		Id(id).
-		Doc(string(doc)).
+		Doc(docMap).
 		Do(ctx)
 
 	if err != nil {
