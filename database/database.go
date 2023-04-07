@@ -115,11 +115,54 @@ func ConnectES() {
 	ES = ESInstance{
 		Client: es,
 	}
-
-	createIndices(ES)
+	createCollectionsIndex(ES)
+	createItemsIndex(ES)
 }
 
-func createIndices(database ESInstance) {
+func createCollectionsIndex(database ESInstance) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Create the collections index
+	indexName := "collections"
+	exists, err := database.Client.IndexExists(indexName).Do(ctx)
+	if err != nil {
+		log.Fatalf("Could not contact Elasticsearch: %v", err)
+	}
+	if !exists {
+		// Define the mapping for the index
+		mapping := `{
+			"mappings": {
+				"properties": {
+				"data": {
+					"properties": {
+					"extent": {
+						"properties": {
+						"temporal": {
+							"properties": {
+							"interval": {
+								"type": "text"
+							}
+							}
+						}
+						}
+					}
+					}
+				}
+				}
+			}
+		}`
+
+		_, err := database.Client.CreateIndex(indexName).BodyString(mapping).Do(ctx)
+		if err != nil {
+			log.Fatalf("Could not create Elasticsearch index: %v", err)
+		}
+	}
+
+	// Create other indices as needed
+}
+
+func createItemsIndex(database ESInstance) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -136,16 +179,16 @@ func createIndices(database ESInstance) {
                 "properties": {
                     "geometry": {
                         "type": "geo_shape"
-                    }
-                },
-				"properties": {
+                	},
 					"properties": {
-						"datetime": {
-							"type": "date"
+						"properties": {
+							"datetime": {
+								"type": "date"
+							}
 						}
 					}
-				}
-            }
+            	}
+			}
         }`
 
 		_, err := database.Client.CreateIndex(indexName).BodyString(mapping).Do(ctx)
