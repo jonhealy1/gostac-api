@@ -201,3 +201,78 @@ func GetESCollections(c *fiber.Ctx) error {
 	}
 	return c.JSON(collectionDataList)
 }
+
+func EditESCollection(c *fiber.Ctx) error {
+	id := c.Params("collectionId")
+	if id == "" {
+		c.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "missing id parameter"})
+		return fmt.Errorf("missing id parameter")
+	}
+
+	stac_collection := new(models.StacCollection)
+	err := c.BodyParser(&stac_collection)
+	if err != nil {
+		c.Status(http.StatusUnprocessableEntity).JSON(
+			&fiber.Map{"message": "request failed"})
+		return err
+	}
+
+	now := time.Now()
+	collection := models.Collection{
+		Data:      models.JSONB{(&stac_collection)},
+		Id:        stac_collection.Id,
+		UpdatedAt: &now,
+	}
+	validator := validator.New()
+	err = validator.Struct(collection)
+
+	if err != nil {
+		c.Status(http.StatusUnprocessableEntity).JSON(
+			&fiber.Map{"message": err},
+		)
+		return err
+	}
+
+	// Update the collection document in Elasticsearch
+	indexName := "collections"
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err = database.ES.Client.Get().
+		Index(indexName).
+		Id(id).
+		Do(ctx)
+
+	if err != nil {
+		c.Status(http.StatusNotFound).JSON(
+			&fiber.Map{"message": fmt.Sprintf("Collection %s not found", id)})
+		return err
+	}
+
+	doc, err := json.Marshal(collection)
+	if err != nil {
+		c.Status(http.StatusInternalServerError).JSON(
+			&fiber.Map{"message": "could not marshal collection"})
+		return err
+	}
+
+	resp, err := database.ES.Client.Update().
+		Index(indexName).
+		Id(id).
+		Doc(string(doc)).
+		Do(ctx)
+
+	if err != nil {
+		c.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "could not update collection"})
+		return err
+	}
+
+	c.Status(http.StatusOK).JSON(&fiber.Map{
+		"message":         "success",
+		"id":              resp.Id,
+		"stac_collection": collection.Data[0],
+	})
+	return nil
+}
