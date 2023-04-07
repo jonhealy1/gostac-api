@@ -74,6 +74,7 @@ type Collection struct {
 	Id        string     `json:"id,omitempty"`
 	Data      JSONB      `gorm:"type:jsonb" json:"data,omitempty"`
 	CreatedAt *time.Time `json:"CreatedAt,omitempty"`
+	UpdatedAt *time.Time `json:"UpdatedAt,omitempty"`
 }
 
 type Root struct {
