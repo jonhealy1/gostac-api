@@ -41,10 +41,8 @@ func CreateESCollection(c *fiber.Ctx) error {
 		return err
 	}
 
-	// Create Elasticsearch index if it doesn't exist
 	indexName := "collections"
 
-	// Index the collection document in Elasticsearch
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
