@@ -11,5 +11,5 @@ func ESItemRoute(app *fiber.App) {
 	// app.Get("/es/collections/:collectionId/items/:itemId", controllers.ESGetItem)
 	// app.Get("/es/collections/:collectionId/items", controllers.ESGetItemCollection)
 	// app.Put("/es/collections/:collectionId/items/:itemId", controllers.ESEditItem)
-	// app.Delete("/es/collections/:collectionId/items/:itemId", controllers.ESDeleteItem)
+	app.Delete("/es/collections/:collectionId/items/:itemId", controllers.ESDeleteItem)
 }
