@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/jonhealy1/goapi-stac/database"
+	"github.com/olivere/elastic"
 
 	"github.com/go-playground/validator"
 
@@ -32,6 +33,26 @@ func checkCollectionExists(collectionId string) (bool, error) {
 	}
 
 	return exists, nil
+}
+
+func ESItemExists(itemId string) (bool, error) {
+	indexName := "items"
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Check if the item exists
+	_, err := database.ES.Client.Get().
+		Index(indexName).
+		Id(itemId).
+		Do(ctx)
+
+	if err != nil {
+		if elastic.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
 
 func ESCreateItem(c *fiber.Ctx) error {
@@ -121,6 +142,49 @@ func ESCreateItem(c *fiber.Ctx) error {
 		"id":         resp.Id,
 		"collection": collectionId,
 		"stac_item":  stac_item,
+	})
+	return nil
+}
+
+func ESDeleteItem(c *fiber.Ctx) error {
+	itemId := c.Params("itemId")
+	if itemId == "" {
+		c.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "item id cannot be empty"})
+		return fmt.Errorf("missing itemId parameter")
+	}
+
+	exists, err := ESItemExists(itemId)
+	if err != nil {
+		c.Status(http.StatusInternalServerError).JSON(
+			&fiber.Map{"message": "could not check if item exists"})
+		return err
+	}
+
+	if !exists {
+		c.Status(http.StatusNotFound).JSON(
+			&fiber.Map{"message": fmt.Sprintf("Item %s not found", itemId)})
+		return fmt.Errorf("item not found")
+	}
+
+	// Proceed with the deletion if the item exists
+	indexName := "items"
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err = database.ES.Client.Delete().
+		Index(indexName).
+		Id(itemId).
+		Do(ctx)
+
+	if err != nil {
+		c.Status(http.StatusInternalServerError).JSON(
+			&fiber.Map{"message": "could not delete item"})
+		return err
+	}
+
+	c.Status(http.StatusOK).JSON(&fiber.Map{
+		"message": fmt.Sprintf("Item %s deleted successfully", itemId),
 	})
 	return nil
 }
