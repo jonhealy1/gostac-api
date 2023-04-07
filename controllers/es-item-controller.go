@@ -1,0 +1,123 @@
+package controllers
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/jonhealy1/goapi-stac/database"
+
+	"github.com/go-playground/validator"
+
+	"github.com/gofiber/fiber/v2"
+
+	"github.com/jonhealy1/goapi-stac/models"
+)
+
+func ESCreateItem(c *fiber.Ctx) error {
+	collectionId := c.Params("collectionId")
+	if collectionId == "" {
+		c.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "collection id cannot be empty"})
+		return fmt.Errorf("missing collectionId parameter")
+	}
+
+	indexName := "collections"
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Check if the collection exists
+	_, err := database.ES.Client.Get().
+		Index(indexName).
+		Id(collectionId).
+		Do(ctx)
+
+	if err != nil {
+		c.Status(http.StatusNotFound).JSON(
+			&fiber.Map{"message": fmt.Sprintf("Collection %s not found", collectionId)})
+		return err
+	}
+
+	stac_item := new(models.StacItem)
+	err = c.BodyParser(&stac_item)
+	if err != nil {
+		c.Status(http.StatusUnprocessableEntity).JSON(
+			&fiber.Map{"message": "request failed"})
+		return err
+	}
+
+	itemId := stac_item.Id
+	if itemId == "" {
+		c.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "missing itemId in item"})
+		return fmt.Errorf("missing itemId in item")
+	}
+
+	validator := validator.New()
+	err = validator.Struct(stac_item)
+
+	if err != nil {
+		c.Status(http.StatusUnprocessableEntity).JSON(
+			&fiber.Map{"message": err},
+		)
+		return err
+	}
+
+	indexName = "items"
+
+	exists, err := database.ES.Client.IndexExists(indexName).Do(ctx)
+	if err != nil {
+		c.Status(http.StatusInternalServerError).JSON(
+			&fiber.Map{"message": "could not contact Elasticsearch"})
+		return err
+	}
+	if !exists {
+		_, err := database.ES.Client.CreateIndex(indexName).Do(ctx)
+		if err != nil {
+			c.Status(http.StatusInternalServerError).JSON(
+				&fiber.Map{"message": "could not create Elasticsearch index"})
+			return err
+		}
+	}
+
+	// Check if the item already exists
+	_, err = database.ES.Client.Get().
+		Index(indexName).
+		Id(itemId).
+		Do(ctx)
+
+	if err == nil {
+		c.Status(http.StatusConflict).JSON(
+			&fiber.Map{"message": fmt.Sprintf("Item %s already exists", itemId)})
+		return err
+	}
+
+	doc, err := json.Marshal(stac_item)
+	if err != nil {
+		c.Status(http.StatusInternalServerError).JSON(
+			&fiber.Map{"message": "could not marshal item"})
+		return err
+	}
+
+	resp, err := database.ES.Client.Index().
+		Index(indexName).
+		Id(itemId).
+		BodyString(string(doc)).
+		Do(ctx)
+
+	if err != nil {
+		c.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "could not index item"})
+		return err
+	}
+
+	c.Status(http.StatusCreated).JSON(&fiber.Map{
+		"message":    "success",
+		"id":         resp.Id,
+		"collection": collectionId,
+		"stac_item":  stac_item,
+	})
+	return nil
+}
