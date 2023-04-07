@@ -195,7 +195,7 @@ func ESUpdateItem(c *fiber.Ctx) error {
 		return fmt.Errorf("missing collectionId or itemId parameter")
 	}
 
-	exists, err := ESIItemExists(itemId)
+	exists, err := ESItemExists(itemId)
 	if err != nil {
 		c.Status(http.StatusInternalServerError).JSON(
 			&fiber.Map{"message": "error checking item existence"})
@@ -256,5 +256,55 @@ func ESUpdateItem(c *fiber.Ctx) error {
 		"collection": collectionId,
 		"stac_item":  updatedStacItem,
 	})
+	return nil
+}
+
+func ESGetItem(c *fiber.Ctx) error {
+	collectionId := c.Params("collectionId")
+	itemId := c.Params("itemId")
+
+	if collectionId == "" || itemId == "" {
+		c.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "collection id and item id cannot be empty"})
+		return fmt.Errorf("missing collectionId or itemId parameter")
+	}
+
+	exists, err := ESItemExists(itemId)
+	if err != nil {
+		c.Status(http.StatusInternalServerError).JSON(
+			&fiber.Map{"message": "error checking item existence"})
+		return err
+	}
+
+	if !exists {
+		c.Status(http.StatusNotFound).JSON(
+			&fiber.Map{"message": fmt.Sprintf("Item %s not found", itemId)})
+		return fmt.Errorf("item not found")
+	}
+
+	indexName := "items"
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	resp, err := database.ES.Client.Get().
+		Index(indexName).
+		Id(itemId).
+		Do(ctx)
+
+	if err != nil {
+		c.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "could not get item"})
+		return err
+	}
+
+	var itemJson map[string]interface{}
+	err = json.Unmarshal(resp.Source, &itemJson)
+	if err != nil {
+		c.Status(http.StatusInternalServerError).JSON(
+			&fiber.Map{"message": "could not unmarshal item"})
+		return err
+	}
+
+	c.Status(http.StatusOK).JSON(itemJson)
 	return nil
 }
