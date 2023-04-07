@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/jonhealy1/goapi-stac/database"
-	"github.com/olivere/elastic"
 
 	"github.com/go-playground/validator"
 
@@ -40,19 +39,16 @@ func ESItemExists(itemId string) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Check if the item exists
-	_, err := database.ES.Client.Get().
+	exists, err := database.ES.Client.Exists().
 		Index(indexName).
 		Id(itemId).
 		Do(ctx)
 
 	if err != nil {
-		if elastic.IsNotFound(err) {
-			return false, nil
-		}
 		return false, err
 	}
-	return true, nil
+
+	return exists, nil
 }
 
 func ESCreateItem(c *fiber.Ctx) error {
@@ -164,7 +160,7 @@ func ESDeleteItem(c *fiber.Ctx) error {
 	if !exists {
 		c.Status(http.StatusNotFound).JSON(
 			&fiber.Map{"message": fmt.Sprintf("Item %s not found", itemId)})
-		return fmt.Errorf("item not found")
+		return c.Status(http.StatusNotFound).SendString(fmt.Sprintf("Item %s not found", itemId))
 	}
 
 	// Proceed with the deletion if the item exists
