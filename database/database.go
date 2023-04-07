@@ -180,6 +180,9 @@ func createItemsIndex(database ESInstance) {
                     "geometry": {
                         "type": "geo_shape"
                 	},
+					"collection": {
+						"type": "keyword"
+					},
 					"properties": {
 						"properties": {
 							"datetime": {
