@@ -43,7 +43,7 @@ func Setup() *fiber.App {
 	return app
 }
 
-func TestCreateCollection(t *testing.T) {
+func TestPgCreateCollection(t *testing.T) {
 	var expected_collection models.StacCollection
 	jsonFile, err := os.Open("setup_data/collection.json")
 
@@ -80,7 +80,7 @@ func TestCreateCollection(t *testing.T) {
 
 	assert.Equalf(t, "success", collection_response.Message, "create collection")
 }
-func TestGetCollection(t *testing.T) {
+func TestPgGetCollection(t *testing.T) {
 	LoadCollection()
 	LoadItems()
 
@@ -153,7 +153,7 @@ func TestGetCollection(t *testing.T) {
 	}
 }
 
-func TestGetAllCollections(t *testing.T) {
+func TestPgGetAllCollections(t *testing.T) {
 	tests := []struct {
 		description   string
 		route         string
@@ -205,7 +205,7 @@ func TestGetAllCollections(t *testing.T) {
 	}
 }
 
-func TestEditCollection(t *testing.T) {
+func TestPgEditCollection(t *testing.T) {
 	var expected_collection models.StacCollection
 	jsonFile, err := os.Open("setup_data/updated_collection.json")
 
@@ -257,7 +257,7 @@ func TestEditCollection(t *testing.T) {
 	assert.Equalf(t, "success", collection_response.Message, "update collection")
 }
 
-func TestDeleteCollection(t *testing.T) {
+func TestPgDeleteCollection(t *testing.T) {
 	app := Setup()
 
 	// Create Request
