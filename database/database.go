@@ -1,9 +1,11 @@
 package database
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/jonhealy1/goapi-stac/models"
 
@@ -113,6 +115,46 @@ func ConnectES() {
 	ES = ESInstance{
 		Client: es,
 	}
+
+	createIndices(ES)
+}
+
+func createIndices(database ESInstance) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Create the items index
+	indexName := "items"
+	exists, err := database.Client.IndexExists(indexName).Do(ctx)
+	if err != nil {
+		log.Fatalf("Could not contact Elasticsearch: %v", err)
+	}
+	if !exists {
+		// Define the mapping for the index
+		mapping := `{
+            "mappings": {
+                "properties": {
+                    "geometry": {
+                        "type": "geo_shape"
+                    }
+                },
+				"properties": {
+					"properties": {
+						"datetime": {
+							"type": "date"
+						}
+					}
+				}
+            }
+        }`
+
+		_, err := database.Client.CreateIndex(indexName).BodyString(mapping).Do(ctx)
+		if err != nil {
+			log.Fatalf("Could not create Elasticsearch index: %v", err)
+		}
+	}
+
+	// Create other indices as needed
 }
 
 // func ConnectRedis() {

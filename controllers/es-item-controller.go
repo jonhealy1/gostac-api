@@ -67,20 +67,20 @@ func ESCreateItem(c *fiber.Ctx) error {
 
 	indexName = "items"
 
-	exists, err := database.ES.Client.IndexExists(indexName).Do(ctx)
-	if err != nil {
-		c.Status(http.StatusInternalServerError).JSON(
-			&fiber.Map{"message": "could not contact Elasticsearch"})
-		return err
-	}
-	if !exists {
-		_, err := database.ES.Client.CreateIndex(indexName).Do(ctx)
-		if err != nil {
-			c.Status(http.StatusInternalServerError).JSON(
-				&fiber.Map{"message": "could not create Elasticsearch index"})
-			return err
-		}
-	}
+	// exists, err := database.ES.Client.IndexExists(indexName).Do(ctx)
+	// if err != nil {
+	// 	c.Status(http.StatusInternalServerError).JSON(
+	// 		&fiber.Map{"message": "could not contact Elasticsearch"})
+	// 	return err
+	// }
+	// if !exists {
+	// 	_, err := database.ES.Client.CreateIndex(indexName).Do(ctx)
+	// 	if err != nil {
+	// 		c.Status(http.StatusInternalServerError).JSON(
+	// 			&fiber.Map{"message": "could not create Elasticsearch index"})
+	// 		return err
+	// 	}
+	// }
 
 	// Check if the item already exists
 	_, err = database.ES.Client.Get().
