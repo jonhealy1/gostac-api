@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/jonhealy1/goapi-stac/database"
+	"github.com/olivere/elastic"
 
 	"github.com/go-playground/validator"
 
@@ -307,4 +309,56 @@ func ESGetItem(c *fiber.Ctx) error {
 
 	c.Status(http.StatusOK).JSON(itemJson)
 	return nil
+}
+
+func ESGetItemCollection(c *fiber.Ctx) error {
+	collectionId := c.Params("collectionId")
+	if collectionId == "" {
+		c.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "collection id cannot be empty"})
+		return fmt.Errorf("missing collectionId parameter")
+	}
+
+	limit, _ := strconv.Atoi(c.Query("limit", "10"))
+	offset, _ := strconv.Atoi(c.Query("offset", "0"))
+
+	indexName := "items"
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	searchResult, err := database.ES.Client.Search().
+		Index(indexName).
+		Query(elastic.NewTermQuery("collection", collectionId)).
+		From(offset).
+		Size(limit).
+		Do(ctx)
+
+	if err != nil {
+		c.Status(http.StatusInternalServerError).JSON(
+			&fiber.Map{"message": "error fetching items from Elasticsearch"})
+		return err
+	}
+
+	var stacItems []models.StacItem
+	for _, hit := range searchResult.Hits.Hits {
+		var item models.StacItem
+		err = json.Unmarshal(hit.Source, &item)
+		if err != nil {
+			c.Status(http.StatusInternalServerError).JSON(
+				&fiber.Map{"message": "error unmarshalling item"})
+			return err
+		}
+		stacItems = append(stacItems, item)
+	}
+
+	return c.Status(http.StatusOK).JSON(fiber.Map{
+		"message":    "item collection retrieved successfully",
+		"collection": collectionId,
+		"context": models.Context{
+			Returned: len(stacItems),
+			Limit:    limit,
+		},
+		"type":     "FeatureCollection",
+		"features": stacItems,
+	})
 }
