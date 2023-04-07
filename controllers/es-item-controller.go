@@ -184,3 +184,77 @@ func ESDeleteItem(c *fiber.Ctx) error {
 	})
 	return nil
 }
+
+func ESUpdateItem(c *fiber.Ctx) error {
+	collectionId := c.Params("collectionId")
+	itemId := c.Params("itemId")
+
+	if collectionId == "" || itemId == "" {
+		c.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "collection id and item id cannot be empty"})
+		return fmt.Errorf("missing collectionId or itemId parameter")
+	}
+
+	exists, err := ESIItemExists(itemId)
+	if err != nil {
+		c.Status(http.StatusInternalServerError).JSON(
+			&fiber.Map{"message": "error checking item existence"})
+		return err
+	}
+
+	if !exists {
+		c.Status(http.StatusNotFound).JSON(
+			&fiber.Map{"message": fmt.Sprintf("Item %s not found", itemId)})
+		return fmt.Errorf("item not found")
+	}
+
+	updatedStacItem := new(models.StacItem)
+	err = c.BodyParser(&updatedStacItem)
+	if err != nil {
+		c.Status(http.StatusUnprocessableEntity).JSON(
+			&fiber.Map{"message": "request failed"})
+		return err
+	}
+
+	validator := validator.New()
+	err = validator.Struct(updatedStacItem)
+
+	if err != nil {
+		c.Status(http.StatusUnprocessableEntity).JSON(
+			&fiber.Map{"message": err},
+		)
+		return err
+	}
+
+	indexName := "items"
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	doc, err := json.Marshal(updatedStacItem)
+	if err != nil {
+		c.Status(http.StatusInternalServerError).JSON(
+			&fiber.Map{"message": "could not marshal item"})
+		return err
+	}
+
+	_, err = database.ES.Client.Update().
+		Index(indexName).
+		Id(itemId).
+		Doc(string(doc)).
+		DocAsUpsert(true).
+		Do(ctx)
+
+	if err != nil {
+		c.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "could not update item"})
+		return err
+	}
+
+	c.Status(http.StatusOK).JSON(&fiber.Map{
+		"message":    "success",
+		"id":         itemId,
+		"collection": collectionId,
+		"stac_item":  updatedStacItem,
+	})
+	return nil
+}
