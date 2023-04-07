@@ -67,6 +67,7 @@ func Setup() *fiber.App {
 	// }))
 
 	router.CollectionRoute(app)
+	router.ESCollectionRoute(app)
 	router.ItemRoute(app)
 	router.SearchRoute(app)
 
