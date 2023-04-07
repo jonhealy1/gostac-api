@@ -69,6 +69,7 @@ func Setup() *fiber.App {
 	router.CollectionRoute(app)
 	router.ESCollectionRoute(app)
 	router.ItemRoute(app)
+	router.ESItemRoute(app)
 	router.SearchRoute(app)
 
 	app.All("*", func(c *fiber.Ctx) error {
