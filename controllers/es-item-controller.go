@@ -239,10 +239,19 @@ func ESUpdateItem(c *fiber.Ctx) error {
 		return err
 	}
 
+	// Unmarshal JSON string back into a map
+	var docMap map[string]interface{}
+	err = json.Unmarshal(doc, &docMap)
+	if err != nil {
+		c.Status(http.StatusInternalServerError).JSON(
+			&fiber.Map{"message": "could not unmarshal item"})
+		return err
+	}
+
 	_, err = database.ES.Client.Update().
 		Index(indexName).
 		Id(itemId).
-		Doc(string(doc)).
+		Doc(docMap).
 		DocAsUpsert(true).
 		Do(ctx)
 
