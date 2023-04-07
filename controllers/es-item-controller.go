@@ -16,17 +16,22 @@ import (
 	"github.com/jonhealy1/goapi-stac/models"
 )
 
-func checkCollectionExists(collectionId string) error {
+func checkCollectionExists(collectionId string) (bool, error) {
 	indexName := "collections"
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err := database.ES.Client.Get().
+	// Check if the collection exists
+	exists, err := database.ES.Client.Exists().
 		Index(indexName).
 		Id(collectionId).
 		Do(ctx)
 
-	return err
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
 }
 
 func ESCreateItem(c *fiber.Ctx) error {
@@ -40,17 +45,17 @@ func ESCreateItem(c *fiber.Ctx) error {
 		return fmt.Errorf("missing collectionId parameter")
 	}
 
-	err := checkCollectionExists(collectionId)
+	exists, err := checkCollectionExists(collectionId)
 	if err != nil {
-		c.Status(http.StatusNotFound).JSON(
-			&fiber.Map{"message": fmt.Sprintf("Collection %s not found", collectionId)})
+		c.Status(http.StatusInternalServerError).JSON(
+			&fiber.Map{"message": fmt.Sprintf("Error checking collection %s: %v", collectionId, err)})
 		return err
 	}
 
-	if err != nil {
+	if !exists {
 		c.Status(http.StatusNotFound).JSON(
 			&fiber.Map{"message": fmt.Sprintf("Collection %s not found", collectionId)})
-		return err
+		return fmt.Errorf("collection %s not found", collectionId)
 	}
 
 	stac_item := new(models.StacItem)
