@@ -276,3 +276,46 @@ func EditESCollection(c *fiber.Ctx) error {
 	})
 	return nil
 }
+
+func DeleteESCollection(c *fiber.Ctx) error {
+	id := c.Params("collectionId")
+	if id == "" {
+		c.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "missing id parameter"})
+		return fmt.Errorf("missing id parameter")
+	}
+
+	indexName := "collections"
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Check if the collection exists
+	_, err := database.ES.Client.Get().
+		Index(indexName).
+		Id(id).
+		Do(ctx)
+
+	if err != nil {
+		c.Status(http.StatusNotFound).JSON(
+			&fiber.Map{"message": fmt.Sprintf("Collection %s not found", id)})
+		return err
+	}
+
+	// Delete the collection document from Elasticsearch
+	resp, err := database.ES.Client.Delete().
+		Index(indexName).
+		Id(id).
+		Do(ctx)
+
+	if err != nil {
+		c.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "could not delete collection"})
+		return err
+	}
+
+	c.Status(http.StatusOK).JSON(&fiber.Map{
+		"message": "success",
+		"id":      resp.Id,
+	})
+	return nil
+}
