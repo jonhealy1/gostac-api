@@ -1,5 +1,5 @@
 # goapistac  
-### a STAC api written in go with fiber, gorm and postgres  
+### a STAC api written in go with fiber, gorm, elasticsearch and postgres  
 #### https://documenter.getpostman.com/view/12888943/VVBXwQnu   
 -------
 

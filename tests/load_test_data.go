@@ -5,10 +5,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"go-stac-api-postgres/database"
-	"go-stac-api-postgres/models"
 	"io/ioutil"
 	"os"
+
+	"github.com/jonhealy1/goapi-stac/database"
+	"github.com/jonhealy1/goapi-stac/models"
 
 	"github.com/go-playground/validator"
 )

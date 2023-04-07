@@ -1,9 +1,10 @@
 package tests
 
 import (
-	"go-stac-api-postgres/controllers"
-	"go-stac-api-postgres/models"
 	"testing"
+
+	"github.com/jonhealy1/goapi-stac/controllers"
+	"github.com/jonhealy1/goapi-stac/models"
 )
 
 func TestBuildSearchString(t *testing.T) {

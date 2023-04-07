@@ -15,8 +15,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 
-	database "go-stac-api-postgres/database"
-	router "go-stac-api-postgres/router"
+	database "github.com/jonhealy1/goapi-stac/database"
+	router "github.com/jonhealy1/goapi-stac/router"
 )
 
 func main() {
@@ -33,9 +33,14 @@ func main() {
 }
 
 func Setup() *fiber.App {
+	// connect to database: postgres and elastic search
 	database.ConnectDb()
+	database.ConnectES()
+
+	// create new fiber app
 	app := fiber.New()
 
+	// register middleware
 	app.Use(cors.New())
 	app.Use(compress.New())
 	//app.Use(cache.New())
@@ -62,7 +67,9 @@ func Setup() *fiber.App {
 	// }))
 
 	router.CollectionRoute(app)
+	router.ESCollectionRoute(app)
 	router.ItemRoute(app)
+	router.ESItemRoute(app)
 	router.SearchRoute(app)
 
 	app.All("*", func(c *fiber.Ctx) error {

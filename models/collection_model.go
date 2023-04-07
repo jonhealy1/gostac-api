@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -70,8 +71,10 @@ type StacCollection struct {
 type Collection struct {
 	gorm.Model
 
-	Id   string `json:"id,omitempty"`
-	Data JSONB  `gorm:"type:jsonb" json:"data,omitempty"`
+	Id        string     `json:"id,omitempty"`
+	Data      JSONB      `gorm:"type:jsonb" json:"data,omitempty"`
+	CreatedAt *time.Time `json:"CreatedAt,omitempty"`
+	UpdatedAt *time.Time `json:"UpdatedAt,omitempty"`
 }
 
 type Root struct {

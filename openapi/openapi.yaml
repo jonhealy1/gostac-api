@@ -1,0 +1,112 @@
+openapi: 3.0.0
+info:
+  title: Your API Title
+  description: Description of your API
+  version: 1.0.0
+paths:
+  /collections:
+    post:
+      summary: Create a STAC collection
+      description: Create a collection with a unique ID
+      tags:
+        - Collections
+      operationId: post-collection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StacCollection'
+      responses:
+        201:
+          description: Collection created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: success
+                  id:
+                    type: string
+                    example: your-collection-id
+                  stac_collection:
+                    $ref: '#/components/schemas/StacCollection'
+        400:
+          description: Bad request, could not create collection
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: could not create collection
+        422:
+          description: Unprocessable Entity, request failed or validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: request failed
+components:
+  schemas:
+    StacCollection:
+      type: object
+      properties:
+        stac_version:
+          type: string
+          example: "1.0.0"
+        id:
+          type: string
+          example: "example-collection"
+        title:
+          type: string
+          example: "Example Collection"
+        description:
+          type: string
+          example: "A sample STAC collection"
+        keywords:
+          type: array
+          items:
+            type: string
+          example: ["keyword1", "keyword2"]
+        stac_extensions:
+          type: array
+          items:
+            type: string
+          example: ["ext1", "ext2"]
+        license:
+          type: string
+          example: "CC-BY-4.0"
+        providers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Provider'
+        extent:
+          $ref: '#/components/schemas/Extent'
+        summaries:
+          type: object
+          additionalProperties: true
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
+        item_type:
+          type: string
+          example: "Feature"
+        crs:
+          type: array
+          items:
+            type: string
+          example: ["EPSG:4326"]
+      required:
+        - id
+        - description
+        - extent
+
+    # Add definitions for Provider, Extent, and Link models here

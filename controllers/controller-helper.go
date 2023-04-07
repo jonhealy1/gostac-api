@@ -3,9 +3,10 @@ package controllers
 import (
 	"bytes"
 	"fmt"
-	"go-stac-api-postgres/models"
 	"log"
 	"strings"
+
+	"github.com/jonhealy1/goapi-stac/models"
 
 	"github.com/spatial-go/geoos/geoencoding"
 )
