@@ -10,11 +10,8 @@ func CollectionRoute(app *fiber.App) {
 	app.Get("/", controllers.Root)
 	app.Get("/conformance", controllers.Conformance)
 	app.Post("/collections", controllers.CreateCollection)
-	app.Post("/es/collections", controllers.CreateESCollection)
 	app.Get("/collections/:collectionId", controllers.GetCollection)
-	app.Get("/es/collections/:collectionId", controllers.GetESCollection)
 	app.Put("/collections/:collectionId", controllers.EditCollection)
 	app.Delete("/collections/:collectionId", controllers.DeleteCollection)
 	app.Get("/collections", controllers.GetCollections)
-	app.Get("/es/collections", controllers.GetESCollections)
 }
