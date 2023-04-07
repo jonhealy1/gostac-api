@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"github.com/lib/pq"
 )
 
@@ -24,10 +26,12 @@ type StacItem struct {
 }
 
 type Item struct {
-	Id         string `json:"id,omitempty"`
-	Collection string `json:"collection,omitempty"`
-	Data       string `json:"data,omitempty"`
-	Geometry   string `json:"geometry,omitempty"`
+	Id         string     `json:"id,omitempty"`
+	Collection string     `json:"collection,omitempty"`
+	Data       string     `json:"data,omitempty"`
+	Geometry   string     `json:"geometry,omitempty"`
+	CreatedAt  *time.Time `json:"CreatedAt,omitempty"`
+	UpdatedAt  *time.Time `json:"UpdatedAt,omitempty"`
 }
 
 type Context struct {
