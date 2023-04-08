@@ -44,7 +44,7 @@ func EsSetup() *fiber.App {
 }
 
 func TestEsCreateCollection(t *testing.T) {
-	var expected_collection models.StacCollection
+	var expected_collection models.Collection
 	jsonFile, err := os.Open("setup_data/collection.json")
 
 	if err != nil {
@@ -81,8 +81,11 @@ func TestEsCreateCollection(t *testing.T) {
 	assert.Equalf(t, "success", collection_response.Message, "create collection")
 }
 func TestEsGetCollection(t *testing.T) {
-	LoadCollection()
-	LoadItems()
+	// Setup the app as it is done in the main function
+	app := EsSetup()
+
+	LoadEsCollection()
+	LoadEsItems()
 
 	var expected_collection models.Collection
 	jsonFile, _ := os.Open("setup_data/collection.json")
@@ -106,9 +109,6 @@ func TestEsGetCollection(t *testing.T) {
 			expectedBody:  expected_collection,
 		},
 	}
-
-	// Setup the app as it is done in the main function
-	app := EsSetup()
 
 	// Iterate through test single test cases
 	for _, test := range tests {
@@ -169,7 +169,7 @@ func TestEsGetAllCollections(t *testing.T) {
 	}
 
 	// Setup the app as it is done in the main function
-	app := Setup()
+	app := EsSetup()
 
 	// Iterate through test single test cases
 	for _, test := range tests {
