@@ -80,12 +80,13 @@ func TestEsCreateCollection(t *testing.T) {
 
 	assert.Equalf(t, "success", collection_response.Message, "create collection")
 }
+
 func TestEsGetCollection(t *testing.T) {
 	// Setup the app as it is done in the main function
 	app := EsSetup()
 
 	LoadEsCollection()
-	LoadEsItems()
+	// LoadEsItems()
 
 	var expected_collection models.Collection
 	jsonFile, _ := os.Open("setup_data/collection.json")
@@ -206,59 +207,72 @@ func TestEsGetAllCollections(t *testing.T) {
 }
 
 func TestEsEditCollection(t *testing.T) {
-	var expected_collection models.StacCollection
-	jsonFile, err := os.Open("setup_data/updated_collection.json")
-
-	if err != nil {
-		fmt.Println(err)
-	}
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	json.Unmarshal(byteValue, &expected_collection)
-	// responseBody := bytes.NewBuffer(byteValue)
-
-	jsonReq, err := json.Marshal(expected_collection)
-
 	// Setup the app as it is done in the main function
-	app := Setup()
+	app := EsSetup()
 
-	//client := &http.Client{}
-	req, err := http.NewRequest(
-		http.MethodPut,
-		"/es/collections/sentinel-s2-l2a-cogs-test-2",
-		bytes.NewBuffer(jsonReq),
-	)
-	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+	// Assuming the collection ID is known, you can directly fetch the existing collection
+	collectionId := "sentinel-s2-l2a-cogs-test-2"
+
+	// Create a new HTTP request for getting the existing collection
+	getReq, _ := http.NewRequest("GET", "/es/collections/"+collectionId, nil)
+
+	getResp, err := app.Test(getReq, -1)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
+		log.Fatalln(err)
 	}
 
-	// Perform the request plain with the app.
-	// The -1 disables request latency.
-	resp, err := app.Test(req, -1)
+	assert.Equalf(t, 200, getResp.StatusCode, "get existing collection")
 
-	// resp, err := client.Do(req)
+	body, err := ioutil.ReadAll(getResp.Body)
 	if err != nil {
-		log.Fatalf("An Error Occured %v", err)
-	}
-	defer resp.Body.Close()
-
-	assert.Equalf(t, "200 OK", resp.Status, "edit collection")
-
-	// Read Response Body
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatalln(err)
 	}
 
-	var collection_response responses.CollectionResponse
-	json.Unmarshal(body, &collection_response)
+	var existing_collection models.StacCollection
+	json.Unmarshal(body, &existing_collection)
 
-	assert.Equalf(t, "success", collection_response.Message, "update collection")
+	// Change the "stac_version" field of the existing_collection
+	existing_collection.StacVersion = "1.0.0"
+
+	// Marshal the updated existing_collection into JSON
+	updatedCollectionJSON, _ := json.Marshal(existing_collection)
+	updatedCollectionBuffer := bytes.NewBuffer(updatedCollectionJSON)
+
+	// Create a new HTTP request for updating the collection
+	updateReq, _ := http.NewRequest("PUT", "/es/collections/"+collectionId, updatedCollectionBuffer)
+	updateReq.Header.Set("Content-Type", "application/json")
+
+	updateResp, err := app.Test(updateReq, -1)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	assert.Equalf(t, 200, updateResp.StatusCode, "update collection")
+
+	// Create a new HTTP request for getting the updated collection
+	getUpdatedReq, _ := http.NewRequest("GET", "/es/collections/"+collectionId, nil)
+
+	getUpdatedResp, err := app.Test(getUpdatedReq, -1)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	assert.Equalf(t, 200, getUpdatedResp.StatusCode, "get updated collection")
+
+	updatedBody, err := ioutil.ReadAll(getUpdatedResp.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	var updated_collection_response models.StacCollection
+	json.Unmarshal(updatedBody, &updated_collection_response)
+
+	// Check if the "stac_version" field is updated
+	assert.Equalf(t, "1.0.0", updated_collection_response.StacVersion, "check updated stac_version")
 }
 
 func TestEsDeleteCollection(t *testing.T) {
-	app := Setup()
+	app := EsSetup()
 
 	// Create Request
 	req, err := http.NewRequest("DELETE", "/es/collections/sentinel-s2-l2a-cogs-test-2", nil)
