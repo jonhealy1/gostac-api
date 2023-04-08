@@ -6,32 +6,66 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
 
+	"github.com/go-playground/validator"
 	"github.com/jonhealy1/goapi-stac/database"
 	"github.com/jonhealy1/goapi-stac/models"
 )
 
-func LoadEsCollection() {
-	//database.ConnectES()
+func LoadEsCollection() error {
 	jsonFile, err := os.Open("setup_data/test-collection.json")
-
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 
-	var collection models.Collection
-	json.Unmarshal(byteValue, &collection)
+	var stacCollection models.StacCollection
+	json.Unmarshal(byteValue, &stacCollection)
 
-	put1, err := database.ES.Client.Index().
-		Index("collections").
-		Id(collection.Id).
-		BodyJson(collection).
-		Do(context.Background())
-	if err != nil {
-		panic(err)
+	now := time.Now()
+	collection := models.Collection{
+		Data:      models.JSONB{(&stacCollection)},
+		Id:        stacCollection.Id,
+		CreatedAt: &now,
 	}
-	fmt.Printf("Indexed collection %s to index %s, type %s\n", put1.Id, put1.Index, put1.Type)
+	validator := validator.New()
+	err = validator.Struct(collection)
+
+	if err != nil {
+		return err
+	}
+
+	indexName := "collections"
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err = database.ES.Client.Get().
+		Index(indexName).
+		Id(collection.Id).
+		Do(ctx)
+
+	if err == nil {
+		return fmt.Errorf("Collection %s already exists", collection.Id)
+	}
+
+	doc, err := json.Marshal(collection)
+	if err != nil {
+		return fmt.Errorf("Could not marshal collection: %v", err)
+	}
+
+	_, err = database.ES.Client.Index().
+		Index(indexName).
+		Id(collection.Id).
+		BodyString(string(doc)).
+		Do(ctx)
+
+	if err != nil {
+		return fmt.Errorf("Could not index collection: %v", err)
+	}
+
+	return nil
 }
 
 func LoadEsItems() {
