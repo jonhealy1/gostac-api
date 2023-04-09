@@ -4,13 +4,15 @@ FROM golang:1.17
 # RUN useradd -m appuser
 
 # Install air for hot-reloading
-RUN go get -u github.com/cosmtrek/air
+RUN go get -u github.com/pilu/fresh
 
 # Set the working directory
 WORKDIR /app
 
 # Copy go.mod and go.sum files
 COPY go.mod go.sum ./
+
+COPY fresh.conf /app/fresh.conf
 
 # Download dependencies
 RUN go mod download
@@ -28,4 +30,4 @@ COPY . .
 EXPOSE 6002
 
 # Start air for hot-reloading
-CMD ["air"]
+CMD ["fresh"]
