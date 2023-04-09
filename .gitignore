@@ -18,3 +18,5 @@
 go-stac-api-postgres
 
 *.DS_Store
+
+tmp/build-errors.log
