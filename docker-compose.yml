@@ -2,8 +2,9 @@ version: '3.8'
 services: 
   api:
     container_name: api
-    build: .
-    dockerfile: Dockerfile.dev
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
     restart: always
     environment:
       - POSTGRES_USER=username
