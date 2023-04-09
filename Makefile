@@ -1,6 +1,6 @@
 .PHONY: database
 database:
-	docker-compose up database
+	docker-compose up database elasticsearch
 
 .PHONY: api
 api:
@@ -17,5 +17,5 @@ psql-shell:		## Enter psql shell
 .PHONY: test
 test:
 	go clean -testcache
-	go test go-stac-api-postgres/tests
+	go test github.com/jonhealy1/goapi-stac/tests
 

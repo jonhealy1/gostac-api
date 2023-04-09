@@ -1,4 +1,4 @@
-# goapistac  
+# goapi-stac  
 ### a STAC api written in go with fiber, gorm, elasticsearch and postgres  
 #### https://documenter.getpostman.com/view/12888943/VVBXwQnu   
 -------
@@ -18,5 +18,11 @@
 ### RUN IN DOCKER (localhost:6002):  
 ```$ make database```  
 ```$ make api```  
-   
+
+---- 
+### Developer notes:    
+#### Identify failing tests:
+```go test -v github.com/jonhealy1/goapi-stac/tests 2>&1 | grep "FAIL\|---"```    
+#### Run specific test:   
+```go test github.com/jonhealy1/goapi-stac/tests -run TestEsGetCollection```
 

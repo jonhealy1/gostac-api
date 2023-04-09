@@ -80,31 +80,41 @@ func ConnectDb() {
 	}
 }
 
-func ConnectES() {
-	host, port, user, pass := "", "", "", ""
-	host, err := getEnv("ES_HOST")
-
-	// this is done for CI, not ideal ....
-	if err != nil {
-		host = "localhost"
-		port = "9200"
-		user = ""
-		pass = ""
-	} else {
-		port, _ = getEnv("ES_PORT")
-		user, _ = getEnv("ES_USER")
-		pass, _ = getEnv("ES_PASS")
+func getEnvWithDefault(key, defaultValue string) string {
+	value, err := getEnv(key)
+	if err != nil || value == "" {
+		return defaultValue
 	}
+	return value
+}
+
+func ConnectES() {
+	host := getEnvWithDefault("ES_HOST", "localhost")
+	port := getEnvWithDefault("ES_PORT", "9200")
+	user := getEnvWithDefault("ES_USER", "username")
+	pass := getEnvWithDefault("ES_PASS", "password")
+
+	log.Println("host: ", host)
+	log.Println("port: ", port)
 
 	dsn := fmt.Sprintf(
 		"http://%s:%s",
 		host, port,
 	)
 
+	log.Println("dsn: ", dsn)
+
+	// es, err := elastic.NewClient(
+	// 	elastic.SetURL(dsn),
+	// 	elastic.SetSniff(false),
+	// 	elastic.SetBasicAuth(user, pass), // Add this line to set basic authentication
+	// )
+
 	es, err := elastic.NewClient(
 		elastic.SetURL(dsn),
 		elastic.SetSniff(false),
-		elastic.SetBasicAuth(user, pass), // Add this line to set basic authentication
+		elastic.SetBasicAuth(user, pass),
+		elastic.SetHealthcheckTimeoutStartup(10*time.Second), // Increase the timeout
 	)
 
 	if err != nil {
