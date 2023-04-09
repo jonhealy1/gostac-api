@@ -3,7 +3,8 @@ services:
   api:
     container_name: api
     build: .
-    restart: always 
+    dockerfile: Dockerfile.dev
+    restart: always
     environment:
       - POSTGRES_USER=username
       - POSTGRES_PASSWORD=password
@@ -14,7 +15,6 @@ services:
       - ES_PORT=9200
       - ES_USER=username
       - ES_PASS=password
-
     ports:
       - "6002:6002"
     expose:
@@ -23,6 +23,8 @@ services:
       - database
     links:
       - database
+    volumes:
+      - .:/app
 
   database:
     container_name: postgres
