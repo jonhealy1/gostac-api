@@ -50,7 +50,8 @@ jobs:
 
       - name: Test Go application
         run: |
-          cd pg-api
           go get github.com/joho/godotenv/cmd/godotenv@latest
+          echo "$GITHUB_WORKSPACE/go/bin" >> $GITHUB_PATH
+          cd pg-api
           godotenv -f .env-example go test ./...
   
