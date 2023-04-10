@@ -1,10 +1,9 @@
 version: '3.8'
-services: 
-  api:
-    container_name: api
+services:
+  pg-api:
+    container_name: pg-api
     build:
-      context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: pg-api/Dockerfile.dev
     restart: always
     environment:
       - POSTGRES_USER=username
@@ -25,7 +24,7 @@ services:
     links:
       - database
     volumes:
-      - .:/app
+      - ./pg-api:/app/pg-api
 
   database:
     container_name: postgres
