@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/jonhealy1/goapi-stac/models"
+	"github.com/jonhealy1/goapi-stac/pg-api/models"
 
 	"github.com/joho/godotenv"
 	"github.com/olivere/elastic/v7"
@@ -38,8 +38,8 @@ func ConnectDb() {
 
 	// this is done for CI, not ideal ....
 	if err != nil {
-		host = "localhost"
-		port = "5433"
+		host = "database"
+		port = "5432"
 		user = "username"
 		pass = "password"
 		dbname = "postgis"

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/jonhealy1/goapi-stac/database"
-	"github.com/jonhealy1/goapi-stac/models"
+	"github.com/jonhealy1/goapi-stac/pg-api/database"
+	"github.com/jonhealy1/goapi-stac/pg-api/models"
 
 	"github.com/gofiber/fiber/v2"
 )

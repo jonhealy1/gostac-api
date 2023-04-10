@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jonhealy1/goapi-stac/database"
-	"github.com/jonhealy1/goapi-stac/models"
+	"github.com/jonhealy1/goapi-stac/pg-api/database"
+	"github.com/jonhealy1/goapi-stac/pg-api/models"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -103,9 +103,9 @@ func GetSearch(c *fiber.Ctx) error {
 		encodedString := toWKT(geoString)
 
 		if len(search.Collections) > 0 {
-			database.DB.Db.Raw(searchString, encodedString, search.Collections, limit).Scan(&items)
+			database.DB.Db.Raw(searchString, encodedString, search.Collections).Scan(&items)
 		} else {
-			database.DB.Db.Raw(searchString, encodedString, limit).Scan(&items)
+			database.DB.Db.Raw(searchString, encodedString).Scan(&items)
 		}
 	} else if len(search.Collections) > 0 {
 		database.DB.Db.Raw(searchString, search.Collections, limit).Scan(&items)

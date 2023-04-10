@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/jonhealy1/goapi-stac/models"
+	"github.com/jonhealy1/goapi-stac/pg-api/models"
 
 	"github.com/spatial-go/geoos/geoencoding"
 )

@@ -3,8 +3,8 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/jonhealy1/goapi-stac/database"
-	"github.com/jonhealy1/goapi-stac/models"
+	"github.com/jonhealy1/goapi-stac/pg-api/database"
+	"github.com/jonhealy1/goapi-stac/pg-api/models"
 
 	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
