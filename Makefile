@@ -4,7 +4,7 @@ database:
 
 .PHONY: api
 api:
-	docker-compose up api
+	docker-compose up pg-api
 
 .PHONY: down
 down:
@@ -17,5 +17,5 @@ psql-shell:		## Enter psql shell
 .PHONY: test
 test:
 	go clean -testcache
-	go test github.com/jonhealy1/goapi-stac/tests
+	cd pg-api && go test github.com/jonhealy1/goapi-stac/pg-api/tests
 
