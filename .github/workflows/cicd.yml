@@ -55,5 +55,10 @@ jobs:
           echo "$GITHUB_WORKSPACE/go/bin" >> $GITHUB_PATH
           export POSTGRES_HOST=localhost
           export POSTGRES_PORT=5433
-          godotenv -f .env-example go test ./...
+          echo "POSTGRES_USER=$POSTGRES_USER" >> .env
+          echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" >> .env
+          echo "POSTGRES_DBNAME=$POSTGRES_DBNAME" >> .env
+          echo "POSTGRES_PORT=$POSTGRES_PORT" >> .env
+          echo "POSTGRES_HOST=$POSTGRES_HOST" >> .env
+          godotenv -f .env go test ./...
   
