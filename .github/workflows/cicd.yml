@@ -53,5 +53,7 @@ jobs:
           cd pg-api
           go install github.com/joho/godotenv/cmd/godotenv@latest
           echo "$GITHUB_WORKSPACE/go/bin" >> $GITHUB_PATH
+          export POSTGRES_HOST=localhost
+          export POSTGRES_PORT=5433
           godotenv -f .env-example go test ./...
   
