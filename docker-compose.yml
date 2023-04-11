@@ -1,5 +1,26 @@
 version: '3.8'
 services:
+  es-api:
+    container_name: es-api
+    build:
+      dockerfile: es-api/Dockerfile.dev
+    restart: always
+    environment:
+      - ES_HOST=elasticsearch
+      - ES_PORT=9200
+      - ES_USER=username
+      - ES_PASS=password
+    ports:
+      - "6003:6002"
+    expose:
+      - "6003"
+    depends_on:
+      - elasticsearch
+    links:
+      - elasticsearch
+    volumes:
+      - ./es-api:/app/es-api
+
   pg-api:
     container_name: pg-api
     build:
@@ -11,10 +32,6 @@ services:
       - POSTGRES_DBNAME=postgis
       - POSTGRES_PORT=5432
       - POSTGRES_HOST=database
-      - ES_HOST=elasticsearch
-      - ES_PORT=9200
-      - ES_USER=username
-      - ES_PASS=password
     ports:
       - "6002:6002"
     expose:

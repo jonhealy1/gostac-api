@@ -4,7 +4,7 @@ database:
 
 .PHONY: api
 api:
-	docker-compose up pg-api
+	docker-compose up pg-api es-api
 
 .PHONY: down
 down:
