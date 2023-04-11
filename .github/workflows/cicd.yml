@@ -48,7 +48,7 @@ jobs:
         with:
           go-version: 1.19.x
 
-      - name: Test Go application
+      - name: Test pg-api Go application
         run: |
           cd pg-api
           go install github.com/joho/godotenv/cmd/godotenv@latest
@@ -60,5 +60,11 @@ jobs:
           echo "POSTGRES_DBNAME=$POSTGRES_DBNAME" >> .env
           echo "POSTGRES_PORT=$POSTGRES_PORT" >> .env
           echo "POSTGRES_HOST=$POSTGRES_HOST" >> .env
+          godotenv -f .env go test ./...
+
+      - name: Test es-api Go application
+        run: |
+          cd es-api
+          go install github.com/joho/godotenv/cmd/godotenv@latest
           godotenv -f .env go test ./...
   
