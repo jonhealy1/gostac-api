@@ -7,9 +7,9 @@ import (
 )
 
 func ESItemRoute(app *fiber.App) {
-	app.Post("/es/collections/:collectionId/items", controllers.ESCreateItem)
-	app.Get("/es/collections/:collectionId/items/:itemId", controllers.ESGetItem)
-	app.Get("/es/collections/:collectionId/items", controllers.ESGetItemCollection)
-	app.Put("/es/collections/:collectionId/items/:itemId", controllers.ESUpdateItem)
-	app.Delete("/es/collections/:collectionId/items/:itemId", controllers.ESDeleteItem)
+	app.Post("/collections/:collectionId/items", controllers.ESCreateItem)
+	app.Get("/collections/:collectionId/items/:itemId", controllers.ESGetItem)
+	app.Get("/collections/:collectionId/items", controllers.ESGetItemCollection)
+	app.Put("/collections/:collectionId/items/:itemId", controllers.ESUpdateItem)
+	app.Delete("/collections/:collectionId/items/:itemId", controllers.ESDeleteItem)
 }

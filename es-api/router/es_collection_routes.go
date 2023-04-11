@@ -7,9 +7,9 @@ import (
 )
 
 func ESCollectionRoute(app *fiber.App) {
-	app.Post("/es/collections", controllers.CreateESCollection)
-	app.Get("/es/collections/:collectionId", controllers.GetESCollection)
-	app.Put("/es/collections/:collectionId", controllers.EditESCollection)
-	app.Delete("/es/collections/:collectionId", controllers.DeleteESCollection)
-	app.Get("/es/collections", controllers.GetESCollections)
+	app.Post("/collections", controllers.CreateESCollection)
+	app.Get("/collections/:collectionId", controllers.GetESCollection)
+	app.Put("/collections/:collectionId", controllers.EditESCollection)
+	app.Delete("/collections/:collectionId", controllers.DeleteESCollection)
+	app.Get("/collections", controllers.GetESCollections)
 }
