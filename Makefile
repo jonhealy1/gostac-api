@@ -6,6 +6,10 @@ database:
 api:
 	docker-compose up pg-api es-api
 
+.PHONY: msg
+msg:
+	docker-compose up kafka zookeeper
+	
 .PHONY: down
 down:
 	docker-compose down
