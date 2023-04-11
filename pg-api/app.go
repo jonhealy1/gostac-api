@@ -33,9 +33,8 @@ func main() {
 }
 
 func Setup() *fiber.App {
-	// connect to database: postgres and elastic search
+	// connect to database: postgres
 	database.ConnectDb()
-	database.ConnectES()
 
 	// create new fiber app
 	app := fiber.New()
@@ -67,9 +66,7 @@ func Setup() *fiber.App {
 	// }))
 
 	router.CollectionRoute(app)
-	router.ESCollectionRoute(app)
 	router.ItemRoute(app)
-	router.ESItemRoute(app)
 	router.SearchRoute(app)
 
 	app.All("*", func(c *fiber.Ctx) error {
