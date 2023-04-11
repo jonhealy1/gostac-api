@@ -1,0 +1,26 @@
+FROM golang:1.19
+
+# Install fresh for hot-reloading
+RUN go install github.com/pilu/fresh@latest
+
+# Set the working directory
+WORKDIR /app
+
+# Set the environment variable
+ENV GO111MODULE=on
+
+# Copy go.mod and go.sum files
+COPY ./es-api/go.mod ./es-api/go.sum ./es-api/
+
+# Download dependencies
+RUN cd ./es-api && go mod download
+
+# Copy the entire project
+COPY . .
+
+# Expose the application's port
+EXPOSE 6002
+
+# Start air for hot-reloading from the pg-api directory
+CMD ["sh", "-c", "cd es-api && fresh -c fresh.conf"]
+# CMD ["cd", "pg-api", "fresh"]

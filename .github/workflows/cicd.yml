@@ -46,10 +46,36 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17.x
+          go-version: 1.19.x
 
-      - name: Test Go application
+      - name: Download Go module dependencies for pg-api
         run: |
-          go get github.com/joho/godotenv/cmd/godotenv@latest
-          godotenv -f .env-example go test ./...
+          cd pg-api
+          go mod download
+
+      - name: Download Go module dependencies for es-api
+        run: |
+          cd es-api
+          go mod download
+
+      - name: Test pg-api Go application
+        run: |
+          cd pg-api
+          go install github.com/joho/godotenv/cmd/godotenv@latest
+          echo "$GITHUB_WORKSPACE/go/bin" >> $GITHUB_PATH
+          export POSTGRES_HOST=localhost
+          export POSTGRES_PORT=5433
+          echo "POSTGRES_USER=$POSTGRES_USER" >> .env
+          echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" >> .env
+          echo "POSTGRES_DBNAME=$POSTGRES_DBNAME" >> .env
+          echo "POSTGRES_PORT=$POSTGRES_PORT" >> .env
+          echo "POSTGRES_HOST=$POSTGRES_HOST" >> .env
+          godotenv -f .env go test ./...
+
+      - name: Test es-api Go application
+        run: |
+          cd es-api
+          go install github.com/joho/godotenv/cmd/godotenv@latest
+          echo "ES_HOST=localhost" >> .env
+          godotenv go test ./...
   
