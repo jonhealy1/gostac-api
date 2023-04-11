@@ -67,5 +67,6 @@ jobs:
           cd es-api
           go install github.com/joho/godotenv/cmd/godotenv@latest
           echo "ES_HOST=localhost" >> .env
+          go mod download
           godotenv go test ./...
   
