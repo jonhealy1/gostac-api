@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/jonhealy1/goapi-stac/pg-api/models"
 
 	"github.com/spatial-go/geoos/geoencoding"
@@ -178,4 +179,28 @@ func BuildSortString(searchString string, search models.Search) string {
 	}
 	searchString += " ORDER BY " + strings.Join(fieldStrings, ", ")
 	return searchString
+}
+
+func sendKafkaMessage(producer *kafka.Producer, topic string, message string) {
+	deliveryChan := make(chan kafka.Event)
+	err := producer.Produce(&kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+		Value:          []byte(message),
+	}, deliveryChan)
+
+	if err != nil {
+		fmt.Printf("Failed to send message: %v\n", err)
+		return
+	}
+
+	e := <-deliveryChan
+	m := e.(*kafka.Message)
+
+	if m.TopicPartition.Error != nil {
+		fmt.Printf("Failed to deliver message: %v\n", m.TopicPartition.Error)
+	} else {
+		fmt.Printf("Delivered message to %v\n", m.TopicPartition)
+	}
+
+	close(deliveryChan)
 }
