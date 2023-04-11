@@ -58,7 +58,7 @@ func TestEsCreateCollection(t *testing.T) {
 	app := EsSetup()
 
 	// Create a new HTTP request
-	req, _ := http.NewRequest("POST", "/es/collections", bytes.NewBuffer(responseBody.Bytes()))
+	req, _ := http.NewRequest("POST", "/collections", bytes.NewBuffer(responseBody.Bytes()))
 
 	// Set the Content-Type header to indicate the type of data in the request body
 	req.Header.Set("Content-Type", "application/json")
@@ -104,7 +104,7 @@ func TestEsGetCollection(t *testing.T) {
 	}{
 		{
 			description:   "GET collection route",
-			route:         "/es/collections/sentinel-s2-l2a-cogs-test-2",
+			route:         "/collections/sentinel-s2-l2a-cogs-test-2",
 			expectedError: false,
 			expectedCode:  200,
 			expectedBody:  expected_collection,
@@ -163,7 +163,7 @@ func TestEsGetAllCollections(t *testing.T) {
 	}{
 		{
 			description:   "GET collections route",
-			route:         "/es/collections",
+			route:         "/collections",
 			expectedError: false,
 			expectedCode:  200,
 		},
@@ -214,7 +214,7 @@ func TestEsEditCollection(t *testing.T) {
 	collectionId := "sentinel-s2-l2a-cogs-test-2"
 
 	// Create a new HTTP request for getting the existing collection
-	getReq, _ := http.NewRequest("GET", "/es/collections/"+collectionId, nil)
+	getReq, _ := http.NewRequest("GET", "/collections/"+collectionId, nil)
 
 	getResp, err := app.Test(getReq, -1)
 	if err != nil {
@@ -239,7 +239,7 @@ func TestEsEditCollection(t *testing.T) {
 	updatedCollectionBuffer := bytes.NewBuffer(updatedCollectionJSON)
 
 	// Create a new HTTP request for updating the collection
-	updateReq, _ := http.NewRequest("PUT", "/es/collections/"+collectionId, updatedCollectionBuffer)
+	updateReq, _ := http.NewRequest("PUT", "/collections/"+collectionId, updatedCollectionBuffer)
 	updateReq.Header.Set("Content-Type", "application/json")
 
 	updateResp, err := app.Test(updateReq, -1)
@@ -250,7 +250,7 @@ func TestEsEditCollection(t *testing.T) {
 	assert.Equalf(t, 200, updateResp.StatusCode, "update collection")
 
 	// Create a new HTTP request for getting the updated collection
-	getUpdatedReq, _ := http.NewRequest("GET", "/es/collections/"+collectionId, nil)
+	getUpdatedReq, _ := http.NewRequest("GET", "/collections/"+collectionId, nil)
 
 	getUpdatedResp, err := app.Test(getUpdatedReq, -1)
 	if err != nil {
@@ -275,7 +275,7 @@ func TestEsDeleteCollection(t *testing.T) {
 	app := EsSetup()
 
 	// Create Request
-	req, err := http.NewRequest("DELETE", "/es/collections/sentinel-s2-l2a-cogs-test-2", nil)
+	req, err := http.NewRequest("DELETE", "/collections/sentinel-s2-l2a-cogs-test-2", nil)
 	if err != nil {
 		log.Fatalf("An Error Occured %v", err)
 	}
