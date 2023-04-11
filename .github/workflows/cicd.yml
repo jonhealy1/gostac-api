@@ -66,5 +66,5 @@ jobs:
         run: |
           cd es-api
           go install github.com/joho/godotenv/cmd/godotenv@latest
-          godotenv -f .env go test ./...
+          godotenv go test ./...
   
