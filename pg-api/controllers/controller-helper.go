@@ -181,6 +181,12 @@ func BuildSortString(searchString string, search models.Search) string {
 	return searchString
 }
 
+/**
+ * sendKafkaMessage sends a message to a specified Kafka topic using the given producer
+ * @param  producer  a pointer to an initialized Kafka producer
+ * @param  topic  a string representing the Kafka topic to send the message to
+ * @param  message  a string containing the message to send to the Kafka topic
+ */
 func sendKafkaMessage(producer *kafka.Producer, topic string, message string) {
 	deliveryChan := make(chan kafka.Event)
 	err := producer.Produce(&kafka.Message{
