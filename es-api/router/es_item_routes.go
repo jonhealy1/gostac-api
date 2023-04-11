@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"github.com/jonhealy1/goapi-stac/pg-api/controllers"
+	"github.com/jonhealy1/goapi-stac/es-api/controllers"
 
 	"github.com/gofiber/fiber/v2"
 )

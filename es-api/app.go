@@ -15,15 +15,15 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 
-	database "github.com/jonhealy1/goapi-stac/pg-api/database"
-	router "github.com/jonhealy1/goapi-stac/pg-api/router"
+	database "github.com/jonhealy1/goapi-stac/es-api/database"
+	router "github.com/jonhealy1/goapi-stac/es-api/router"
 )
 
 func main() {
 	app := Setup()
 
 	value, exists := os.LookupEnv("API_PORT")
-	api_port := 6002
+	api_port := 6003
 	if exists {
 		api_port, _ = strconv.Atoi(value)
 	}
@@ -33,8 +33,7 @@ func main() {
 }
 
 func Setup() *fiber.App {
-	// connect to database: postgres and elastic search
-	database.ConnectDb()
+	// connect to database: elastic search
 	database.ConnectES()
 
 	// create new fiber app
@@ -66,11 +65,8 @@ func Setup() *fiber.App {
 	// 	CacheControl: true,
 	// }))
 
-	router.CollectionRoute(app)
 	router.ESCollectionRoute(app)
-	router.ItemRoute(app)
 	router.ESItemRoute(app)
-	router.SearchRoute(app)
 
 	app.All("*", func(c *fiber.Ctx) error {
 		errorMessage := fmt.Sprintf("Route '%s' does not exist in this API!", c.OriginalURL())

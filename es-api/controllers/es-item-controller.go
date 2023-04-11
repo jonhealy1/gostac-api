@@ -8,14 +8,14 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/jonhealy1/goapi-stac/pg-api/database"
+	"github.com/jonhealy1/goapi-stac/es-api/database"
 	"github.com/olivere/elastic"
 
 	"github.com/go-playground/validator"
 
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/jonhealy1/goapi-stac/pg-api/models"
+	"github.com/jonhealy1/goapi-stac/es-api/models"
 )
 
 func checkCollectionExists(collectionId string) (bool, error) {
