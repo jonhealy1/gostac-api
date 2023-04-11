@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/go-playground/validator"
-	"github.com/jonhealy1/goapi-stac/pg-api/database"
-	"github.com/jonhealy1/goapi-stac/pg-api/models"
+	"github.com/jonhealy1/goapi-stac/es-api/database"
+	"github.com/jonhealy1/goapi-stac/es-api/models"
 )
 
 func LoadEsCollection() error {

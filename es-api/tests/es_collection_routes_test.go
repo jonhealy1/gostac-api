@@ -10,10 +10,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/jonhealy1/goapi-stac/pg-api/database"
-	"github.com/jonhealy1/goapi-stac/pg-api/models"
-	"github.com/jonhealy1/goapi-stac/pg-api/responses"
-	routes "github.com/jonhealy1/goapi-stac/pg-api/router"
+	"github.com/jonhealy1/goapi-stac/es-api/database"
+	"github.com/jonhealy1/goapi-stac/es-api/models"
+	"github.com/jonhealy1/goapi-stac/es-api/responses"
+	routes "github.com/jonhealy1/goapi-stac/es-api/router"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
