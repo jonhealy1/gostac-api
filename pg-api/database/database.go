@@ -38,8 +38,8 @@ func ConnectDb() {
 
 	// this is done for CI, not ideal ....
 	if err != nil {
-		host = "database"
-		port = "5432"
+		host = "localhost"
+		port = "5433"
 		user = "username"
 		pass = "password"
 		dbname = "postgis"
