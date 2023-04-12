@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"fmt"
+	"encoding/json"
 	"net/http"
 
 	"github.com/jonhealy1/goapi-stac/pg-api/database"
@@ -88,10 +88,17 @@ func CreateCollection(c *fiber.Ctx) error {
 		}
 		defer producer.Close()
 
+		// Marshal the stac_collection into a JSON string
+		jsonCollection, err := json.Marshal(stac_collection)
+		if err != nil {
+			c.Status(http.StatusInternalServerError).JSON(
+				&fiber.Map{"message": "failed to marshal collection to JSON"})
+			return err
+		}
+
 		// Send a message to Kafka about the new collection
 		topic := "new-postgres-collection"
-		message := fmt.Sprintf("New collection created: %s", collection.Id)
-		sendKafkaMessage(producer, topic, message)
+		sendKafkaMessage(producer, topic, string(jsonCollection))
 	}
 
 	c.Status(http.StatusCreated).JSON(&fiber.Map{
