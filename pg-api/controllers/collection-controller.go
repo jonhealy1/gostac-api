@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/jonhealy1/goapi-stac/pg-api/database"
 	"github.com/jonhealy1/goapi-stac/pg-api/models"
 
@@ -79,20 +78,21 @@ func CreateCollection(c *fiber.Ctx) error {
 		return err
 	}
 
-	// Initialize the Kafka producer
-	kafkaConfig := &kafka.ConfigMap{"bootstrap.servers": "kafka:9092"}
-	producer, err := kafka.NewProducer(kafkaConfig)
-	if err != nil {
-		c.Status(http.StatusInternalServerError).JSON(
-			&fiber.Map{"message": "failed to connect to Kafka"})
-		return err
-	}
-	defer producer.Close()
+	if isKafkaAvailable() {
+		// Initialize the Kafka producer
+		producer, err := initKafkaProducer()
+		if err != nil {
+			c.Status(http.StatusInternalServerError).JSON(
+				&fiber.Map{"message": "failed to connect to Kafka"})
+			return err
+		}
+		defer producer.Close()
 
-	// Send a message to Kafka about the new collection
-	topic := "new-postgres-collection"
-	message := fmt.Sprintf("New collection created: %s", collection.Id)
-	sendKafkaMessage(producer, topic, message)
+		// Send a message to Kafka about the new collection
+		topic := "new-postgres-collection"
+		message := fmt.Sprintf("New collection created: %s", collection.Id)
+		sendKafkaMessage(producer, topic, message)
+	}
 
 	c.Status(http.StatusCreated).JSON(&fiber.Map{
 		"message":         "success",
