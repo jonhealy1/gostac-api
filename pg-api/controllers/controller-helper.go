@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"net"
 	"strings"
+	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/jonhealy1/goapi-stac/pg-api/models"
@@ -209,4 +211,22 @@ func sendKafkaMessage(producer *kafka.Producer, topic string, message string) {
 	}
 
 	close(deliveryChan)
+}
+
+func initKafkaProducer() (*kafka.Producer, error) {
+	kafkaConfig := &kafka.ConfigMap{"bootstrap.servers": "kafka:9092"}
+	producer, err := kafka.NewProducer(kafkaConfig)
+	if err != nil {
+		return nil, err
+	}
+	return producer, nil
+}
+
+func isKafkaAvailable() bool {
+	timeout := 5 * time.Second
+	_, err := net.DialTimeout("tcp", "kafka:9092", timeout)
+	if err != nil {
+		return false
+	}
+	return true
 }
