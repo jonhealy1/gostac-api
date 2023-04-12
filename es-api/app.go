@@ -78,8 +78,9 @@ func Setup() *fiber.App {
 		})
 	})
 
-	// Start Kafka consumer
+	// Start Kafka consumers
 	go database.StartConsumer("new-postgres-collection", controllers.CreateCollectionFromMessage)
+	go database.StartConsumer("update-postgres-collection", controllers.UpdateCollectionFromMessage)
 
 	return app
 }
