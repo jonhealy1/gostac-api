@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/jonhealy1/goapi-stac/es-api/database"
@@ -16,15 +17,7 @@ import (
 	"github.com/jonhealy1/goapi-stac/es-api/models"
 )
 
-func CreateESCollection(c *fiber.Ctx) error {
-	stac_collection := new(models.StacCollection)
-	err := c.BodyParser(&stac_collection)
-	if err != nil {
-		c.Status(http.StatusUnprocessableEntity).JSON(
-			&fiber.Map{"message": "request failed"})
-		return err
-	}
-
+func CreateESCollectionCore(stac_collection *models.StacCollection) (models.Collection, error) {
 	now := time.Now()
 	collection := models.Collection{
 		Data:      models.JSONB{(&stac_collection)},
@@ -32,13 +25,10 @@ func CreateESCollection(c *fiber.Ctx) error {
 		CreatedAt: &now,
 	}
 	validator := validator.New()
-	err = validator.Struct(collection)
+	err := validator.Struct(collection)
 
 	if err != nil {
-		c.Status(http.StatusUnprocessableEntity).JSON(
-			&fiber.Map{"message": err},
-		)
-		return err
+		return models.Collection{}, err
 	}
 
 	indexName := "collections"
@@ -52,33 +42,55 @@ func CreateESCollection(c *fiber.Ctx) error {
 		Do(ctx)
 
 	if err == nil {
-		c.Status(http.StatusConflict).JSON(
-			&fiber.Map{"message": fmt.Sprintf("Collection %s already exists", collection.Id)})
-		return err
+		return models.Collection{}, fmt.Errorf("Collection %s already exists", collection.Id)
 	}
 
 	doc, err := json.Marshal(collection)
 	if err != nil {
-		c.Status(http.StatusInternalServerError).JSON(
-			&fiber.Map{"message": "could not marshal collection"})
-		return err
+		return models.Collection{}, fmt.Errorf("Could not marshal collection")
 	}
 
-	resp, err := database.ES.Client.Index().
+	_, err = database.ES.Client.Index().
 		Index(indexName).
 		Id(collection.Id).
 		BodyString(string(doc)).
 		Do(ctx)
 
 	if err != nil {
-		c.Status(http.StatusBadRequest).JSON(
-			&fiber.Map{"message": "could not index collection"})
+		return models.Collection{}, fmt.Errorf("Could not index collection")
+	}
+
+	return collection, nil
+}
+
+func CreateESCollection(c *fiber.Ctx, stac_collection *models.StacCollection) error {
+	if stac_collection == nil {
+		stac_collection = new(models.StacCollection)
+		err := c.BodyParser(&stac_collection)
+		if err != nil {
+			c.Status(http.StatusUnprocessableEntity).JSON(
+				&fiber.Map{"message": "request failed"})
+			return err
+		}
+	}
+
+	collection, err := CreateESCollectionCore(stac_collection)
+	if err != nil {
+		// Determine the appropriate status code based on the error message
+		statusCode := http.StatusInternalServerError
+		if strings.Contains(err.Error(), "already exists") {
+			statusCode = http.StatusConflict
+		} else if strings.Contains(err.Error(), "Could not marshal") || strings.Contains(err.Error(), "Could not index") {
+			statusCode = http.StatusBadRequest
+		}
+
+		c.Status(statusCode).JSON(&fiber.Map{"message": err.Error()})
 		return err
 	}
 
 	c.Status(http.StatusCreated).JSON(&fiber.Map{
 		"message":         "success",
-		"id":              resp.Id,
+		"id":              collection.Id,
 		"stac_collection": collection.Data[0],
 	})
 	return nil
