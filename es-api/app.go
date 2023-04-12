@@ -15,6 +15,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 
+	controllers "github.com/jonhealy1/goapi-stac/es-api/controllers"
 	database "github.com/jonhealy1/goapi-stac/es-api/database"
 	router "github.com/jonhealy1/goapi-stac/es-api/router"
 )
@@ -76,6 +77,9 @@ func Setup() *fiber.App {
 			"message": errorMessage,
 		})
 	})
+
+	// Start Kafka consumer
+	go database.StartConsumer("new-postgres-collection", controllers.CreateCollectionFromMessage)
 
 	return app
 }
