@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/jonhealy1/goapi-stac/pg-api/database"
@@ -98,6 +99,7 @@ func CreateCollection(c *fiber.Ctx) error {
 
 		// Send a message to Kafka about the new collection
 		topic := "new-postgres-collection"
+		fmt.Println("Sending message to Kafka topic: " + topic + " with value: " + string(jsonCollection))
 		sendKafkaMessage(producer, topic, string(jsonCollection))
 	}
 
@@ -246,6 +248,30 @@ func EditCollection(c *fiber.Ctx) error {
 			"message": "could not update collection",
 		})
 		return err
+	}
+
+	if isKafkaAvailable() {
+		// Initialize the Kafka producer
+		producer, err := initKafkaProducer()
+		if err != nil {
+			c.Status(http.StatusInternalServerError).JSON(
+				&fiber.Map{"message": "failed to connect to Kafka"})
+			return err
+		}
+		defer producer.Close()
+
+		// Marshal the stac_collection into a JSON string
+		jsonCollection, err := json.Marshal(updated.Data[0])
+		if err != nil {
+			c.Status(http.StatusInternalServerError).JSON(
+				&fiber.Map{"message": "failed to marshal collection to JSON"})
+			return err
+		}
+
+		// Send a message to Kafka about the new collection
+		topic := "update-postgres-collection"
+		fmt.Println("Sending message to Kafka topic: " + topic + " with value: " + string(jsonCollection))
+		sendKafkaMessage(producer, topic, string(jsonCollection))
 	}
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
