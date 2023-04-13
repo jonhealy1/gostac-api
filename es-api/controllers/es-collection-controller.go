@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/jonhealy1/goapi-stac/es-api/database"
@@ -16,69 +17,99 @@ import (
 	"github.com/jonhealy1/goapi-stac/es-api/models"
 )
 
-func CreateESCollection(c *fiber.Ctx) error {
-	stac_collection := new(models.StacCollection)
-	err := c.BodyParser(&stac_collection)
-	if err != nil {
-		c.Status(http.StatusUnprocessableEntity).JSON(
-			&fiber.Map{"message": "request failed"})
-		return err
-	}
-
+func UpsertESCollectionCore(isUpdate bool, id string, stac_collection *models.StacCollection) (models.Collection, error) {
 	now := time.Now()
 	collection := models.Collection{
 		Data:      models.JSONB{(&stac_collection)},
 		Id:        stac_collection.Id,
 		CreatedAt: &now,
+		UpdatedAt: &now,
 	}
 	validator := validator.New()
-	err = validator.Struct(collection)
+	err := validator.Struct(collection)
 
 	if err != nil {
-		c.Status(http.StatusUnprocessableEntity).JSON(
-			&fiber.Map{"message": err},
-		)
-		return err
+		return models.Collection{}, err
 	}
 
 	indexName := "collections"
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	_, err = database.ES.Client.Get().
 		Index(indexName).
-		Id(collection.Id).
+		Id(id).
 		Do(ctx)
 
-	if err == nil {
-		c.Status(http.StatusConflict).JSON(
-			&fiber.Map{"message": fmt.Sprintf("Collection %s already exists", collection.Id)})
-		return err
+	if !isUpdate && err == nil {
+		return models.Collection{}, fmt.Errorf("Collection %s already exists", collection.Id)
+	}
+
+	if isUpdate && err != nil {
+		return models.Collection{}, fmt.Errorf("Collection %s not found", id)
 	}
 
 	doc, err := json.Marshal(collection)
 	if err != nil {
-		c.Status(http.StatusInternalServerError).JSON(
-			&fiber.Map{"message": "could not marshal collection"})
-		return err
+		return models.Collection{}, fmt.Errorf("could not marshal collection")
 	}
 
-	resp, err := database.ES.Client.Index().
-		Index(indexName).
-		Id(collection.Id).
-		BodyString(string(doc)).
-		Do(ctx)
+	var docMap map[string]interface{}
+	err = json.Unmarshal(doc, &docMap)
+	if err != nil {
+		return models.Collection{}, fmt.Errorf("could not unmarshal collection")
+	}
+
+	if isUpdate {
+		fmt.Println("UpdateCollectionFromMessageinUpsertESCollectionCore")
+		_, err = database.ES.Client.Update().
+			Index(indexName).
+			Id(id).
+			Doc(docMap).
+			Do(ctx)
+	} else {
+		_, err = database.ES.Client.Index().
+			Index(indexName).
+			Id(collection.Id).
+			BodyString(string(doc)).
+			Do(ctx)
+	}
 
 	if err != nil {
-		c.Status(http.StatusBadRequest).JSON(
-			&fiber.Map{"message": "could not index collection"})
+		return models.Collection{}, fmt.Errorf("could not %s collection", isUpdate)
+	}
+
+	return collection, nil
+}
+
+func CreateESCollection(c *fiber.Ctx, stac_collection *models.StacCollection) error {
+	if stac_collection == nil {
+		stac_collection = new(models.StacCollection)
+		err := c.BodyParser(&stac_collection)
+		if err != nil {
+			c.Status(http.StatusUnprocessableEntity).JSON(
+				&fiber.Map{"message": "request failed"})
+			return err
+		}
+	}
+
+	collection, err := UpsertESCollectionCore(false, "", stac_collection)
+	if err != nil {
+		// Determine the appropriate status code based on the error message
+		statusCode := http.StatusInternalServerError
+		if strings.Contains(err.Error(), "already exists") {
+			statusCode = http.StatusConflict
+		} else if strings.Contains(err.Error(), "Could not marshal") || strings.Contains(err.Error(), "Could not index") {
+			statusCode = http.StatusBadRequest
+		}
+
+		c.Status(statusCode).JSON(&fiber.Map{"message": err.Error()})
 		return err
 	}
 
 	c.Status(http.StatusCreated).JSON(&fiber.Map{
 		"message":         "success",
-		"id":              resp.Id,
+		"id":              collection.Id,
 		"stac_collection": collection.Data[0],
 	})
 	return nil
@@ -159,7 +190,7 @@ func GetESCollections(c *fiber.Ctx) error {
 	return c.JSON(collectionDataList)
 }
 
-func EditESCollection(c *fiber.Ctx) error {
+func EditESCollection(c *fiber.Ctx, stac_collection *models.StacCollection) error {
 	id := c.Params("collectionId")
 	if id == "" {
 		c.Status(http.StatusBadRequest).JSON(
@@ -167,77 +198,26 @@ func EditESCollection(c *fiber.Ctx) error {
 		return fmt.Errorf("missing id parameter")
 	}
 
-	stac_collection := new(models.StacCollection)
-	err := c.BodyParser(&stac_collection)
-	if err != nil {
-		c.Status(http.StatusUnprocessableEntity).JSON(
-			&fiber.Map{"message": "request failed"})
-		return err
+	if stac_collection == nil {
+		stac_collection = new(models.StacCollection)
+		err := c.BodyParser(&stac_collection)
+		if err != nil {
+			c.Status(http.StatusUnprocessableEntity).JSON(
+				&fiber.Map{"message": "request failed"})
+			return err
+		}
 	}
 
-	now := time.Now()
-	collection := models.Collection{
-		Data:      models.JSONB{(&stac_collection)},
-		Id:        stac_collection.Id,
-		UpdatedAt: &now,
-	}
-	validator := validator.New()
-	err = validator.Struct(collection)
-
-	if err != nil {
-		c.Status(http.StatusUnprocessableEntity).JSON(
-			&fiber.Map{"message": err},
-		)
-		return err
-	}
-
-	// Update the collection document in Elasticsearch
-	indexName := "collections"
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	_, err = database.ES.Client.Get().
-		Index(indexName).
-		Id(id).
-		Do(ctx)
-
-	if err != nil {
-		c.Status(http.StatusNotFound).JSON(
-			&fiber.Map{"message": fmt.Sprintf("Collection %s not found", id)})
-		return err
-	}
-
-	doc, err := json.Marshal(collection)
-	if err != nil {
-		c.Status(http.StatusInternalServerError).JSON(
-			&fiber.Map{"message": "could not marshal collection"})
-		return err
-	}
-
-	// Unmarshal JSON string back into a map
-	var docMap map[string]interface{}
-	err = json.Unmarshal(doc, &docMap)
-	if err != nil {
-		c.Status(http.StatusInternalServerError).JSON(
-			&fiber.Map{"message": "could not unmarshal collection"})
-		return err
-	}
-
-	resp, err := database.ES.Client.Update().
-		Index(indexName).
-		Id(id).
-		Doc(docMap).
-		Do(ctx)
-
+	collection, err := UpsertESCollectionCore(true, id, stac_collection)
 	if err != nil {
 		c.Status(http.StatusBadRequest).JSON(
-			&fiber.Map{"message": "could not update collection"})
+			&fiber.Map{"message": err.Error()})
 		return err
 	}
 
 	c.Status(http.StatusOK).JSON(&fiber.Map{
 		"message":         "success",
-		"id":              resp.Id,
+		"id":              collection.Id,
 		"stac_collection": collection.Data[0],
 	})
 	return nil

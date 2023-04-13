@@ -1,5 +1,5 @@
 # goapi-stac  
-### a STAC api written in go with fiber, gorm, elasticsearch and postgres  
+### a STAC api written in go with fiber, gorm, elasticsearch, postgres and kafka
 #### https://documenter.getpostman.com/view/12888943/VVBXwQnu   
 -------
 
@@ -12,11 +12,12 @@
 ```$ make test```
    
 ### PSQL:
-```$ docker exec -it stac-db bash```
+```$ docker exec -it stac-db bash```   
 ```$ psql```
 
 ### RUN IN DOCKER (localhost:6002):  
-```$ make database```  
+```$ make database```   
+```$ make msg```   
 ```$ make api```  
 
 ---- 

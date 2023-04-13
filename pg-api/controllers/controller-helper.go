@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"net"
 	"strings"
+	"time"
 
+	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/jonhealy1/goapi-stac/pg-api/models"
 
 	"github.com/spatial-go/geoos/geoencoding"
@@ -178,4 +181,52 @@ func BuildSortString(searchString string, search models.Search) string {
 	}
 	searchString += " ORDER BY " + strings.Join(fieldStrings, ", ")
 	return searchString
+}
+
+/**
+ * sendKafkaMessage sends a message to a specified Kafka topic using the given producer
+ * @param  producer  a pointer to an initialized Kafka producer
+ * @param  topic  a string representing the Kafka topic to send the message to
+ * @param  message  a string containing the message to send to the Kafka topic
+ */
+func sendKafkaMessage(producer *kafka.Producer, topic string, message string) {
+	deliveryChan := make(chan kafka.Event)
+	err := producer.Produce(&kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+		Value:          []byte(message),
+	}, deliveryChan)
+
+	if err != nil {
+		fmt.Printf("Failed to send message: %v\n", err)
+		return
+	}
+
+	e := <-deliveryChan
+	m := e.(*kafka.Message)
+
+	if m.TopicPartition.Error != nil {
+		fmt.Printf("Failed to deliver message: %v\n", m.TopicPartition.Error)
+	} else {
+		fmt.Printf("Delivered message to %v\n", m.TopicPartition)
+	}
+
+	close(deliveryChan)
+}
+
+func initKafkaProducer() (*kafka.Producer, error) {
+	kafkaConfig := &kafka.ConfigMap{"bootstrap.servers": "kafka:9092"}
+	producer, err := kafka.NewProducer(kafkaConfig)
+	if err != nil {
+		return nil, err
+	}
+	return producer, nil
+}
+
+func isKafkaAvailable() bool {
+	timeout := 5 * time.Second
+	_, err := net.DialTimeout("tcp", "kafka:9092", timeout)
+	if err != nil {
+		return false
+	}
+	return true
 }

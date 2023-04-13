@@ -3,6 +3,7 @@ module github.com/jonhealy1/goapi-stac/es-api
 go 1.19
 
 require (
+	github.com/confluentinc/confluent-kafka-go v1.9.2
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/gofiber/fiber/v2 v2.43.0
 	github.com/joho/godotenv v1.5.1
