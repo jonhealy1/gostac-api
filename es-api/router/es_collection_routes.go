@@ -11,7 +11,10 @@ func ESCollectionRoute(app *fiber.App) {
 		return controllers.CreateESCollection(c, nil)
 	})
 	app.Get("/collections/:collectionId", controllers.GetESCollection)
-	app.Put("/collections/:collectionId", controllers.EditESCollection)
+	// app.Put("/collections/:collectionId", controllers.EditESCollection)
+	app.Put("/collections/:collectionId", func(c *fiber.Ctx) error {
+		return controllers.EditESCollection(c, nil)
+	})
 	app.Delete("/collections/:collectionId", controllers.DeleteESCollection)
 	app.Get("/collections", controllers.GetESCollections)
 }
