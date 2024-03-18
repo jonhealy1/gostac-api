@@ -7,6 +7,7 @@ import (
 )
 
 func ESCollectionRoute(app *fiber.App) {
+	app.Get("/", controllers.Root)
 	app.Post("/collections", controllers.CreateESCollection)
 	app.Get("/collections/:collectionId", controllers.GetESCollection)
 	app.Put("/collections/:collectionId", controllers.EditESCollection)

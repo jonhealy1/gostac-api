@@ -1,10 +1,17 @@
-# goapi-stac  
+# gostac-api
 ### a STAC api written in go with fiber, gorm, elasticsearch and postgres  
 #### https://documenter.getpostman.com/view/12888943/VVBXwQnu   
 -------
 
-### RUN LOCALLY (localhost:6002):   
-```$ make database```  
+### RUN POSTGRES API LOCALLY (localhost:6002):   
+```$ docker compose up database```  
+```$ cd pg-api```   
+```$ go build```  
+```$ go run app.go```  
+
+### RUN ELASTICSEARCH API LOCALLY (localhost:6003):   
+```$ docker compose up elasticsearch```  
+```$ cd es-api```   
 ```$ go build```  
 ```$ go run app.go```  
     
