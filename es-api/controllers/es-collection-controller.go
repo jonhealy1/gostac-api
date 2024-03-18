@@ -16,6 +16,34 @@ import (
 	"github.com/jonhealy1/goapi-stac/es-api/models"
 )
 
+
+func Root(c *fiber.Ctx) error {
+	links := []models.Link{
+		{
+			Rel:   "self",
+			Type:  "application/json",
+			Href:  "/",
+			Title: "root catalog",
+		},
+		{
+			Rel:   "children",
+			Type:  "application/json",
+			Href:  "/collections",
+			Title: "stac child collections",
+		},
+	}
+
+	rootCatalog := models.Root{
+		Id:          "test-catalog",
+		StacVersion: "1.0.0",
+		Description: "test catalog for goapistac, please edit",
+		Title:       "goapistac",
+		Links:       links,
+	}
+
+	return c.Status(http.StatusOK).JSON(rootCatalog)
+}
+
 func CreateESCollection(c *fiber.Ctx) error {
 	stac_collection := new(models.StacCollection)
 	err := c.BodyParser(&stac_collection)
